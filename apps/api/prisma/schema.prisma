@@ -1,0 +1,124 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  HOST
+  MEMBER
+}
+
+enum MeetingStatus {
+  ACTIVE
+  ENDED
+}
+
+enum RecordingStatus {
+  REQUESTED
+  STARTING
+  RECORDING
+  STOPPING
+  FINALIZING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  displayName  String   @map("display_name")
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(MEMBER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  meetingsCreated Meeting[]            @relation("MeetingCreator")
+  participations  MeetingParticipant[] @relation("ParticipantUser")
+  recordings      Recording[]          @relation("RecordingRequester")
+
+  @@map("users")
+}
+
+/// room_code is unique only among ACTIVE meetings (partial unique index in migration SQL).
+model Meeting {
+  id          String        @id @default(uuid()) @map("meeting_id") @db.Uuid
+  roomCode    String        @map("room_code") @db.Char(4)
+  title       String
+  createdById String        @map("created_by") @db.Uuid
+  status      MeetingStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  endedAt     DateTime?     @map("ended_at")
+
+  createdBy    User                 @relation("MeetingCreator", fields: [createdById], references: [id])
+  participants MeetingParticipant[]
+  recordings   Recording[]
+
+  @@index([roomCode, status])
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  meetingId     String    @map("meeting_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  admittedAt    DateTime  @default(now()) @map("admitted_at")
+  /// Set when the user's media connection is first seen by LiveKit (webhook).
+  firstJoinedAt DateTime? @map("first_joined_at")
+  lastJoinedAt  DateTime? @map("last_joined_at")
+  revokedAt     DateTime? @map("revoked_at")
+  revokedById   String?   @map("revoked_by") @db.Uuid
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation("ParticipantUser", fields: [userId], references: [id])
+
+  @@id([meetingId, userId])
+  @@index([userId])
+  @@map("meeting_participants")
+}
+
+model Recording {
+  id            String          @id @default(uuid()) @map("recording_id") @db.Uuid
+  meetingId     String          @map("room_id") @db.Uuid
+  requestedById String          @map("requested_by") @db.Uuid
+  egressJobId   String?         @unique @map("egress_job_id")
+  status        RecordingStatus @default(REQUESTED)
+  startedAt     DateTime?       @map("started_at")
+  endedAt       DateTime?       @map("ended_at")
+  objectKey     String          @map("object_key")
+  fileSize      BigInt?         @map("file_size")
+  durationMs    Int?            @map("duration_ms")
+  errorMessage  String?         @map("error_message")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  deletedAt     DateTime?       @map("deleted_at")
+  deletedById   String?         @map("deleted_by") @db.Uuid
+
+  meeting     Meeting @relation(fields: [meetingId], references: [id])
+  requestedBy User    @relation("RecordingRequester", fields: [requestedById], references: [id])
+
+  @@index([meetingId])
+  @@index([status])
+  @@map("recordings")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  createdAt  DateTime @default(now()) @map("created_at")
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  ip         String?
+  success    Boolean  @default(true)
+  metadata   Json?
+
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}

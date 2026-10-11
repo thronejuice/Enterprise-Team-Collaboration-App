@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/dist
+.git
+.env
+.env.*
+infra/certs
+tests/e2e/results
+docs
+UXUI

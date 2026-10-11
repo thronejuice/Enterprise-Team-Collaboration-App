@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-container-high":"#222a3d","on-tertiary":"#002e6a","on-surface":"#dae2fd","secondary":"#4cd7f6","surface-container-lowest":"#060e20","on-primary-fixed":"#07006c","outline":"#908fa0","inverse-on-surface":"#283044","surface-bright":"#31394d","on-error":"#690005","on-surface-variant":"#c7c4d7","on-background":"#dae2fd","on-primary-fixed-variant":"#2f2ebe","secondary-fixed":"#acedff","surface-container":"#171f33","surface-container-low":"#131b2e","outline-variant":"#464554","on-secondary-container":"#00424e","surface-container-highest":"#2d3449","tertiary-fixed-dim":"#adc6ff","on-tertiary-fixed":"#001a42","inverse-primary":"#494bd6","secondary-container":"#03b5d3","on-secondary-fixed-variant":"#004e5c","surface":"#0b1326","secondary-fixed-dim":"#4cd7f6","on-tertiary-fixed-variant":"#004395","surface-variant":"#2d3449","primary-container":"#8083ff","surface-tint":"#c0c1ff","on-secondary-fixed":"#001f26","tertiary":"#adc6ff","on-secondary":"#003640","error":"#ffb4ab","tertiary-fixed":"#d8e2ff","background":"#0b1326","tertiary-container":"#4d8eff","on-error-container":"#ffdad6","inverse-surface":"#dae2fd","on-primary-container":"#0d0096","on-tertiary-container":"#00285d","primary":"#c0c1ff","primary-fixed-dim":"#c0c1ff","error-container":"#93000a","primary-fixed":"#e1e0ff","surface-dim":"#0b1326","on-primary":"#1000a9"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-sm":"0.5rem","margin":"1rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","gutter-desktop":"1.5rem","space-md":"0.75rem","margin-desktop":"1.5rem","gutter":"1rem"},fontFamily:{"label-sm":["Inter"],"headline-xl":["Inter"],"headline-lg-mobile":["Inter"],"code-sm":["Inter"],"headline-lg":["Inter"],"label-md":["Inter"],"headline-xl-mobile":["Inter"],"headline-md":["Inter"],"body-md":["Inter"],"body-sm":["Inter"],"headline-sm":["Inter"],"body-lg":["Inter"],"label-lg":["Inter"]},fontSize:{"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"600"}],"headline-xl":["36px",{"lineHeight":"44px","letterSpacing":"-0.025em","fontWeight":"700"}],"headline-lg-mobile":["22px",{"lineHeight":"30px","letterSpacing":"-0.015em","fontWeight":"600"}],"code-sm":["12px",{"lineHeight":"18px","letterSpacing":"0em","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.015em","fontWeight":"500"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0em","fontWeight":"400"}],"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.005em","fontWeight":"400"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"-0.005em","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><div class="fixed top-0 left-0 right-0 h-6 bg-surface-container-lowest/90 backdrop-blur-md z-50 flex items-center justify-between px-space-xl select-none"><div class="flex items-center gap-space-sm"><span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-tight">9:41 AM</span><span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Tue Oct 24</span></div><div class="w-32 h-3.5 bg-surface-container-highest rounded-full mx-auto opacity-70"></div><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-on-surface text-[14px]">signal_cellular_4_bar</span><span class="material-symbols-outlined text-on-surface text-[14px]">wifi</span><span class="material-symbols-outlined text-on-surface text-[16px]">battery_full</span></div></div><aside class="fixed left-0 top-6 bottom-0 w-72 bg-surface-container-low/95 backdrop-blur-xl z-40 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container text-[20px]">hub</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold leading-tight">Nexus</span><span class="font-label-sm text-label-sm text-secondary font-medium">Enterprise Grid</span></div></div><button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high hover:text-on-surface text-on-surface-variant flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">dock_to_left</span></button></div><div class="px-space-md py-space-sm"><div class="h-9 bg-surface-container-lowest/80 rounded-lg px-space-sm flex items-center gap-space-sm text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">search</span><span class="font-body-sm text-body-sm text-outline select-none">Jump to channel or file...</span><span class="ml-auto font-code-sm text-code-sm bg-surface-container px-1.5 py-0.5 rounded text-outline-variant">⌘K</span></div></div><div class="flex-1 overflow-y-auto px-space-sm py-space-xs flex flex-col gap-space-md"><div class="flex flex-col gap-space-xs"><div class="px-space-sm py-space-xs flex items-center justify-between text-on-surface-variant"><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold text-outline">Workspaces</span><span class="material-symbols-outlined text-[16px] hover:text-on-surface cursor-pointer">add</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a aria-current="page" class="h-9 px-space-sm flex items-center justify-between transition-colors bg-surface-container-high text-on-surface font-semibold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-path="channels-feed" href="#"><span class="font-label-lg text-label-lg truncate">All Channels</span><span class="w-2 h-2 rounded-full bg-secondary"></span></a><a class="h-9 px-space-sm rounded-lg flex items-center justify-between text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="active-incident-room" href="#"><span class="font-label-lg text-label-lg truncate">Incident War Rooms</span><span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm">Live</span></a><a class="h-9 px-space-sm rounded-lg flex items-center justify-between text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="video-conference-stage" href="#"><span class="font-label-lg text-label-lg truncate">Executive Briefing</span><span class="w-2 h-2 rounded-full bg-tertiary"></span></a><a class="h-9 px-space-sm rounded-lg flex items-center justify-between text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="direct-dispatches" href="#"><span class="font-label-lg text-label-lg truncate">Direct Dispatches</span></a></nav></div><div class="flex flex-col gap-space-xs"><div class="px-space-sm py-space-xs flex items-center justify-between text-on-surface-variant"><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold text-outline">Active Channels</span><span class="font-code-sm text-code-sm text-outline-variant">8</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a aria-current="page" class="h-8 px-space-sm flex items-center gap-space-sm transition-colors bg-surface-container-high text-on-surface font-semibold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-path="channels-feed" href="#"><span class="font-label-md text-label-md text-outline">#</span><span class="font-body-md text-body-md truncate">ops-mission-control</span></a><a class="h-8 px-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="active-incident-room" href="#"><span class="font-label-md text-label-md text-error">#</span><span class="font-body-md text-body-md truncate">sev-1-core-payments</span></a><a class="h-8 px-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="team-directory" href="#"><span class="font-label-md text-label-md text-outline">#</span><span class="font-body-md text-body-md truncate">eng-platform-reliability</span></a><a class="h-8 px-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="workspace-analytics" href="#"><span class="font-label-md text-label-md text-outline">#</span><span class="font-body-md text-body-md truncate">pod-telemetry-metrics</span></a></nav></div><div class="flex flex-col gap-space-xs"><div class="px-space-sm py-space-xs flex items-center justify-between text-on-surface-variant"><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold text-outline">Team Roster</span><span class="font-label-sm text-label-sm text-secondary">14 Online</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a class="h-8 px-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="team-directory" href="#"><span class="w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-low"></span><span class="font-body-sm text-body-sm truncate">Sarah Vance (Lead SRE)</span></a><a class="h-8 px-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="direct-dispatches" href="#"><span class="w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-low"></span><span class="font-body-sm text-body-sm truncate">Devin Chen (Ops Sec)</span></a></nav></div></div><div class="p-space-sm bg-surface-container-lowest/50 border-t border-outline-variant/30 flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="relative flex-shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-medium truncate">Commander Field</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Field Ops Pod 01</span></div></div><a class="w-7 h-7 rounded-lg hover:bg-surface-container-high hover:text-on-surface text-on-surface-variant flex items-center justify-center transition-colors" data-path="system-settings" href="#"><span class="material-symbols-outlined text-[18px]">settings</span></a></div></aside><div class="pl-72 flex flex-col min-h-screen"><header class="fixed top-6 left-72 right-0 h-14 bg-surface/85 backdrop-blur-xl z-30 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md"><span class="hover:text-on-surface cursor-pointer">Nexus Global</span><span class="material-symbols-outlined text-[14px] text-outline-variant">chevron_right</span><span class="hover:text-on-surface cursor-pointer">Ops Cluster</span><span class="material-symbols-outlined text-[14px] text-outline-variant">chevron_right</span><span class="text-on-surface font-semibold">Primary Stream</span></div><div class="h-4 w-px bg-outline-variant/40 mx-space-xs"></div><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-label-sm text-label-sm"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><span>SYNCED 24ms</span></div></div><div class="flex items-center gap-space-md"><nav class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg"><a aria-current="page" class="px-3 py-1 transition-colors bg-surface-container-high text-on-surface font-semibold rounded-lg" data-path="channels-feed" href="#">Stage</a><a class="px-3 py-1 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-md transition-colors" data-path="video-conference-stage" href="#">Conference</a><a class="px-3 py-1 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-md transition-colors" data-path="workspace-analytics" href="#">Telemetry</a></nav><div class="flex items-center gap-space-xs"><button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high hover:text-on-surface text-on-surface-variant flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">screen_share</span></button><button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high hover:text-on-surface text-on-surface-variant flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">notifications</span></button><button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high hover:text-on-surface text-on-surface-variant flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">splitscreen_left</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-20 w-full px-space-lg bg-surface flex-1"><div class="flex flex-col w-full">
+<!-- Dynamic Ambient Glow behind Main iPad Canvas -->
+<div class="relative w-full overflow-hidden rounded-xl bg-surface shadow-xl">
+<div class="absolute -top-32 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute top-1/2 -right-32 w-80 h-80 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+<!-- iPadOS Fluid Split Container -->
+<div class="relative flex flex-row min-h-[calc(100vh-6rem)] w-full overflow-hidden">
+<!-- LEFT PANE: Master Navigation & Library (iPad Split Master) -->
+<aside class="w-80 flex-shrink-0 flex flex-col bg-surface-container-low transition-all duration-300 ease-in-out select-none" id="ipad-master-pane">
+<!-- Team & Workspace Switcher Header -->
+<div class="p-space-md flex items-center justify-between bg-surface-container-low/70">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-md font-headline-sm text-headline-sm">
+<span class="material-symbols-outlined text-[22px]">layers</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Platform Pod A</span>
+<span class="font-label-sm text-label-sm text-secondary truncate">Bangkok HQ · Grid 04</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">unfold_more</span>
+</button>
+</div>
+<!-- Touch-Target Quick Search -->
+<div class="px-space-md py-space-xs">
+<div class="h-10 px-space-md rounded-xl bg-surface-container-lowest/80 flex items-center gap-space-sm text-outline">
+<span class="material-symbols-outlined text-[18px]">search</span>
+<input class="bg-transparent border-none outline-none text-on-surface font-body-sm text-body-sm w-full placeholder:text-outline" placeholder="Search channels, clips..." type="text"/>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-surface-container text-outline-variant">⌘F</span>
+</div>
+</div>
+<!-- Master Scrollable List Area -->
+<div class="flex-1 overflow-y-auto px-space-sm py-space-xs flex flex-col gap-space-md">
+<!-- Channels Block -->
+<div class="flex flex-col gap-1">
+<div class="px-space-sm py-space-xs flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Active Channels</span>
+<button class="w-6 h-6 rounded flex items-center justify-center hover:bg-surface-container text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+<!-- Active Channel Item: #proj-nexus-core -->
+<button class="w-full h-11 px-space-sm rounded-xl bg-surface-container-high text-on-surface flex items-center justify-between transition-all shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="font-headline-sm text-headline-sm text-secondary">#</span>
+<span class="font-label-lg text-label-lg font-semibold truncate text-on-surface">proj-nexus-core</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Live</span>
+</button>
+<!-- Channel Item: #infra-devops -->
+<button class="w-full h-10 px-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex items-center justify-between transition-all">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="font-headline-sm text-headline-sm text-outline-variant">#</span>
+<span class="font-body-md text-body-md truncate">infra-devops</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-secondary/80"></span>
+</button>
+<!-- Channel Item: #frontend-core -->
+<button class="w-full h-10 px-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex items-center justify-between transition-all">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="font-headline-sm text-headline-sm text-outline-variant">#</span>
+<span class="font-body-md text-body-md truncate">frontend-core</span>
+</div>
+</button>
+<!-- Channel Item: #backend-api -->
+<button class="w-full h-10 px-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex items-center justify-between transition-all">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="font-headline-sm text-headline-sm text-outline-variant">#</span>
+<span class="font-body-md text-body-md truncate">backend-api</span>
+</div>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm">4</span>
+</button>
+</div>
+<!-- Screen Recordings & Clip Library -->
+<div class="flex flex-col gap-1.5 mt-space-xs">
+<div class="px-space-sm py-space-xs flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Touch Screen Clips</span>
+<span class="font-code-sm text-code-sm text-secondary">Cloud Sync</span>
+</div>
+<!-- Clip 1: sprint-24-demo.mp4 -->
+<div class="p-space-sm rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-secondary text-[18px]">videocam</span>
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">sprint-24-demo.mp4</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">14:22</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm text-outline truncate">Thanapat K. · 1080p 60fps</span>
+<span class="font-label-sm text-label-sm text-tertiary">38.4 MB</span>
+</div>
+</div>
+<!-- Clip 2: telemetry-crash-spike.mov -->
+<div class="p-space-sm rounded-xl bg-surface-container/60 hover:bg-surface-container-high transition-colors cursor-pointer flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-error text-[18px]">emergency_recording</span>
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">telemetry-crash-spike.mov</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">03:45</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm text-outline truncate">Somchai P. · SRE Dump</span>
+<span class="font-label-sm text-label-sm text-tertiary">12.1 MB</span>
+</div>
+</div>
+</div>
+<!-- Direct Huddles Roster Widget -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest/70 flex flex-col gap-2 mt-auto">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline font-semibold uppercase tracking-wider">Station Status</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> iPad Pro 12.9
+              </span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container-high rounded-lg p-2 text-center">
+<span class="font-headline-sm text-headline-sm text-on-surface block leading-tight">64.1%</span>
+<span class="font-label-sm text-label-sm text-outline">Memory</span>
+</div>
+<div class="flex-1 bg-surface-container-high rounded-lg p-2 text-center">
+<span class="font-headline-sm text-headline-sm text-secondary block leading-tight">18ms</span>
+<span class="font-label-sm text-label-sm text-outline">Latency</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- RIGHT PANE: Detail Chat & Real-Time Collaboration View -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface-container-lowest/40 backdrop-blur-md">
+<!-- iPad Top Bar with Channel Title & Touch-Optimized Actions -->
+<header class="h-16 px-space-lg flex items-center justify-between bg-surface-container-low/90 backdrop-blur-xl shadow-sm z-20">
+<!-- Master Panel Toggle & Title Block -->
+<div class="flex items-center gap-space-md min-w-0">
+<button class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors shadow-sm" id="toggle-sidebar-btn" type="button">
+<span class="material-symbols-outlined text-[22px]">waves</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight truncate">#proj-nexus-core</span>
+<span class="material-symbols-outlined text-outline text-[18px]">lock_open</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Enterprise Multi-tenant Mesh Gateway · 24 Engineers Active</span>
+</div>
+</div>
+<!-- Member Stack & Primary iPad Action Group -->
+<div class="flex items-center gap-space-sm">
+<!-- Active Avatars Stack -->
+<div class="hidden sm:flex items-center -space-x-2 mr-space-xs">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm text-label-sm shadow-sm" title="Somchai Prasert">SP</div>
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-sm text-label-sm shadow-sm" title="Thanapat Kanok">TK</div>
+<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-sm text-label-sm shadow-sm" title="Nattaya Vorarat">NV</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-label-sm text-label-sm shadow-sm">+8</div>
+</div>
+<!-- Touch Action 1: Meet Now -->
+<button class="h-10 px-3.5 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 transition-all shadow-sm active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span>Meet Now</span>
+</button>
+<!-- Touch Action 2: Share Screen (Prominent Cyan/Indigo Accent) -->
+<button class="h-10 px-4 rounded-xl bg-secondary-container hover:bg-secondary text-on-secondary-container font-label-md text-label-md font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">screen_share</span>
+<span>Share Screen</span>
+</button>
+<!-- Touch Action 3: Record Screen (Red Alert Accent) -->
+<button class="h-10 px-3 rounded-xl bg-error-container hover:bg-error hover:text-on-error text-on-error-container font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-95" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+<span>Rec</span>
+</button>
+<!-- Touch Action 4: Overflow & Search -->
+<button class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+</header>
+<!-- TOP NOTIFICATION BANNERS ZONE -->
+<div class="flex flex-col gap-2 p-space-md pb-0">
+<!-- Active Channel Alert Banner: Live Huddle -->
+<div class="w-full rounded-xl bg-surface-container-high p-space-md flex flex-wrap items-center justify-between gap-space-sm shadow-md">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[24px]">broadcast_on_home</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">Live Screen Share & Huddle Active</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">3 engineers in stage room · Somchai P. broadcasting display</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-9 px-4 rounded-xl bg-secondary hover:bg-secondary-fixed text-on-secondary font-label-md text-label-md font-semibold transition-all active:scale-95 shadow-md flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">volume_up</span>
+<span>Join Huddle</span>
+</button>
+</div>
+</div>
+<!-- Deployment Critical Banner: Verified Green -->
+<div class="w-full rounded-xl bg-surface-container p-space-sm flex items-center justify-between px-space-md shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px]">verified</span>
+<span class="font-label-md text-label-md text-on-surface font-medium truncate">Deployment Status: <strong class="text-secondary">v2.4.0-rc3</strong> | Staging Verified (Green)</span>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-code-sm text-code-sm text-outline hidden sm:inline">Build ID: #8849-BKK</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm font-semibold">100% P99 Healthy</span>
+</div>
+</div>
+</div>
+<!-- TIMELINE MESSAGE STREAM (Bilingual Thai & English, iPad Touch Optimized) -->
+<div class="flex-1 overflow-y-auto p-space-md space-y-space-lg">
+<!-- Day Divider -->
+<div class="flex items-center justify-center my-space-xs">
+<span class="px-3 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-outline shadow-sm">Today, 24 October · Pod Alpha</span>
+</div>
+<!-- Message 1: Somchai Prasert (Lead DevOps) -->
+<div class="flex items-start gap-space-md group">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm text-headline-sm shadow-md">
+                SP
+              </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-secondary"></span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col gap-1.5">
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Somchai Prasert</span>
+<span class="font-label-sm text-label-sm text-secondary">Lead DevOps</span>
+<span class="font-label-sm text-label-sm text-outline">10:42 AM</span>
+</div>
+<!-- Message Body -->
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                ทีมครับ ตรวจสอบพบ Memory spike ชั่วขณะบน Pod ingress หลัง deploy gateway ล่าสุด ผมปรับ patch config ลงใน k8s cluster staging แล้ว ขอให้ frontend ตรวจสอบ socket reconnect payload ครับ:
+              </p>
+<!-- Diagnostic Code Snippet Card -->
+<div class="rounded-xl bg-surface-container-lowest p-space-md flex flex-col gap-2 shadow-inner">
+<div class="flex items-center justify-between text-outline">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-primary">data_object</span>
+<span class="font-code-sm text-code-sm text-primary font-medium">k8s/nexus-gateway-deployment.yaml</span>
+</div>
+<button class="font-label-sm text-label-sm text-outline hover:text-on-surface flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+                  </button>
+</div>
+<pre class="font-code-sm text-code-sm text-on-surface-variant overflow-x-auto leading-relaxed select-all"><code>spec:
+  replicas: 4
+  template:
+    spec:
+      containers:
+      - name: nexus-mesh-gateway
+        image: nexus-cr.internal/gateway:v2.4.0-rc3
+        resources:
+          limits:
+            memory: "1024Mi"
+            cpu: "1200m"
+          requests:
+            memory: "512Mi"
+            cpu: "400m"
+        env:
+        - name: WS_HEARTBEAT_INTERVAL_MS
+          value: "1500"</code></pre>
+</div>
+<!-- Diagnostic Sparkline Graphic Element -->
+<div class="p-space-sm rounded-xl bg-surface-container flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">show_chart</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cluster Memory Trace: Ingress Nodes 01-04</span>
+</div>
+<div class="flex items-center gap-3">
+<!-- Inline SVG Sparkline -->
+<svg class="w-32 h-6 text-secondary" fill="none" viewbox="0 0 120 24">
+<path d="M0 18 Q20 18 30 14 T60 8 T80 20 T100 6 T120 10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">Normalizing (-34%)</span>
+</div>
+</div>
+<!-- Reaction Counter -->
+<div class="flex items-center gap-1.5 mt-1">
+<button class="h-7 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors" type="button">
+<span>🚀</span> <span class="text-outline">4</span>
+</button>
+<button class="h-7 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors" type="button">
+<span>👍</span> <span class="text-outline">6</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Message 2: Thanapat Kanok (Frontend Lead) with Rich Video Preview Card -->
+<div class="flex items-start gap-space-md group">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-sm text-headline-sm shadow-md">
+                TK
+              </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-secondary"></span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col gap-2">
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Thanapat Kanok</span>
+<span class="font-label-sm text-label-sm text-secondary">Frontend Lead</span>
+<span class="font-label-sm text-label-sm text-outline">10:48 AM</span>
+</div>
+<!-- Message Body -->
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                อัดคลิป screen capture ให้เห็นจุดที่ React fiber re-render loop ซ้ำตอน disconnect event ครับ ดูใน preview ด้านล่างได้เลย สรุป AI instant bullet point แนบไว้ให้แล้วครับ:
+              </p>
+<!-- Video Clip Card (Touch Target Optimized) -->
+<div class="w-full max-w-2xl rounded-2xl bg-surface-container overflow-hidden shadow-lg transition-transform duration-200">
+<!-- Video Header -->
+<div class="px-space-md py-space-sm bg-surface-container-high flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Screen Recording: Nexus Client Memory Profile & Websocket Re-render Spike</span>
+</div>
+<div class="flex items-center gap-space-xs text-outline font-code-sm text-code-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest">1080p 60fps</span>
+<span>48.2 MB</span>
+</div>
+</div>
+<!-- Video Thumbnail Stage with Custom Image Placeholder & Play HUD -->
+<div class="relative w-full h-72 bg-surface-container-lowest flex items-center justify-center overflow-hidden group/video cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover opacity-80" data-alt="High tech developer dashboard displaying React profiler flame graphs and WebSocket network waterfall inspector in a dark slate avionics theme with cyan and indigo illuminated metrics" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpLtUBdpvXcYlqJHhW2jbeWXcHOWqKFIvCh3fmOmz6zCq3tyPGn0DkdTXyhm0_CVj32ucRCVmpAgIuly9zUmL-SCl4gqqr9gIeJQHxLa6eQF3sZwP9vDWUBItvhdxNskKoWv22vx3Vq5kkE84i_OWm4GX9MH294YO1EFhi4NZPj23JsVRis5-NtjDbe-uB7EfXCthV8QAblq3QMUuWOOopRPmvvve_Kn9Iq7n-Cs_B9vwcA7C2Y6117Q"/>
+<!-- Gradient Scrim for Contrast -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+<!-- Central Touch Play Button -->
+<div class="relative z-10 w-16 h-16 rounded-2xl bg-primary/90 text-on-primary flex items-center justify-center shadow-2xl transition-transform active:scale-90 group-hover/video:scale-105">
+<span class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<!-- In-Video Badges -->
+<div class="absolute bottom-3 left-3 z-10 flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md text-secondary font-code-sm text-code-sm">04:18 / 08:30</span>
+<span class="px-2 py-0.5 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md text-on-surface font-label-sm text-label-sm">Audio Stream Included</span>
+</div>
+<div class="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">fullscreen</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- AI Instant Summary Bullets -->
+<div class="p-space-md bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+</div>
+<span class="font-label-md text-label-md font-semibold text-on-surface">AI Clip Summary & Key Moments</span>
+</div>
+<ul class="space-y-1.5 pl-6 list-disc font-body-sm text-body-sm text-on-surface-variant marker:text-secondary">
+<li><strong class="text-on-surface">01:15</strong>: Socket reconnect trigger unmounts <code><TelemetryStream /></code> without cancelling active buffer poll.</li>
+<li><strong class="text-on-surface">02:40</strong>: Memory allocations climb from 120MB to 490MB within 14 re-connection cycles.</li>
+<li><strong class="text-on-surface">03:55</strong>: Proposed fix: Memoize event handler and debounced reconnect backoff to 3000ms.</li>
+</ul>
+</div>
+</div>
+<!-- Reactions & Quick Touch Action -->
+<div class="flex items-center gap-2">
+<button class="h-8 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5" type="button">
+<span>🔥</span> <span class="text-outline">5</span>
+</button>
+<button class="h-8 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5" type="button">
+<span>👀</span> <span class="text-outline">3</span>
+</button>
+<button class="h-8 px-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-secondary font-label-sm text-label-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">add_reaction</span> Add Reaction
+                </button>
+</div>
+</div>
+</div>
+<!-- Message 3: Nattaya Vorarat (Product Lead) -->
+<div class="flex items-start gap-space-md group">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-headline-sm text-headline-sm shadow-md">
+                NV
+              </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-secondary"></span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col gap-1.5">
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Nattaya Vorarat</span>
+<span class="font-label-sm text-label-sm text-tertiary">Product Lead</span>
+<span class="font-label-sm text-label-sm text-outline">10:52 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                ยอดเยี่ยมมากค่ะ @Thanapat @Somchai ถ้า patch staging ผ่านเกณฑ์ telemetry ภายใน 11:30 AM ทาง Executive briefing จะอนุมัติ rollout ให้ลูกค้า tier-1 ตามกำหนดการเดิมค่ะ Let's verify on this iPad stage.
+              </p>
+<div class="flex items-center gap-1.5">
+<button class="h-7 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5" type="button">
+<span>💯</span> <span class="text-outline">7</span>
+</button>
+<button class="h-7 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5" type="button">
+<span>🙌</span> <span class="text-outline">4</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Message 4: Anan Rattanaporn (QA Automation) -->
+<div class="flex items-start gap-space-md group">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm shadow-md">
+                AR
+              </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-secondary"></span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col gap-1.5">
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Anan Rattanaporn</span>
+<span class="font-label-sm text-label-sm text-outline">QA Automation</span>
+<span class="font-label-sm text-label-sm text-outline">10:55 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                กำลังรัน Synthetic Cypress E2E suite บน Staging Pod 02 ครับ 120/120 test cases ผ่านหมดแล้ว ไม่มี websocket dropping แล้วครับ!
+              </p>
+<div class="flex items-center gap-1.5">
+<button class="h-7 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5" type="button">
+<span>🎉</span> <span class="text-outline">8</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- IPAD TOUCH-OPTIMIZED CHAT INPUT BAR DOCK -->
+<div class="p-space-md bg-surface-container-low/95 backdrop-blur-xl">
+<div class="rounded-2xl bg-surface-container-lowest p-space-sm flex flex-col gap-2 shadow-lg">
+<!-- Textarea Area for Fingers & Apple Pencil -->
+<div class="flex items-start gap-space-sm px-space-xs">
+<textarea class="w-full bg-transparent border-none outline-none resize-none font-body-md text-body-md text-on-surface placeholder:text-outline leading-relaxed" placeholder="Reply to #proj-nexus-core, tag team members (@), or paste snippets..." rows="2"></textarea>
+</div>
+<!-- Bottom Control Toolbar with Large Touch Targets -->
+<div class="flex items-center justify-between pt-1">
+<!-- Formatting & Media Icons -->
+<div class="flex items-center gap-1">
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">format_bold</span>
+</button>
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">code</span>
+</button>
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</button>
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+</button>
+<div class="h-6 w-px bg-surface-container-highest mx-1"></div>
+<!-- Quick Clip Recorder Button -->
+<button class="h-9 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-secondary font-label-md text-label-md flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">videocam</span>
+<span class="hidden sm:inline">Quick Clip</span>
+</button>
+<!-- Voice Memo Mic Button -->
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+</div>
+<!-- Right Dispatch Actions -->
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors" title="AI Tone Polish" type="button">
+<span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
+</button>
+<button class="h-10 px-5 rounded-xl bg-primary hover:bg-primary-fixed text-on-primary font-label-lg text-label-lg font-semibold flex items-center gap-2 transition-transform active:scale-95 shadow-md" type="button">
+<span>Send</span>
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+<!-- Inline Script for iPad Split Pane Collapse Interaction -->
+<script>
+    (function() {
+      const toggleBtn = document.getElementById('toggle-sidebar-btn');
+      const masterPane = document.getElementById('ipad-master-pane');
+      if (toggleBtn && masterPane) {
+        let isCollapsed = false;
+        toggleBtn.addEventListener('click', () => {
+          isCollapsed = !isCollapsed;
+          if (isCollapsed) {
+            masterPane.style.width = '0px';
+            masterPane.style.opacity = '0';
+            masterPane.style.pointerEvents = 'none';
+          } else {
+            masterPane.style.width = '20rem'; // 80 Tailwind
+            masterPane.style.opacity = '1';
+            masterPane.style.pointerEvents = 'auto';
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

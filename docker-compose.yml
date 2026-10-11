@@ -1,0 +1,278 @@
+name: enterprise-comms-demo
+
+# Every value comes from .env (see .env.example and scripts/init-env.sh).
+# Only Caddy (443/tcp) and LiveKit media (7881/tcp, 7882/udp) are published to the LAN.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16.15
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4.11
+    restart: unless-stopped
+    logging: *logging
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+      - realtime
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    # The official minio/minio image is no longer published; pgsty/minio is a community build of MinIO.
+    image: ${MINIO_IMAGE:-pgsty/minio:RELEASE.2026-08-04T00-00-00Z}
+    restart: unless-stopped
+    logging: *logging
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - backend
+    ports:
+      # Admin console reachable only from the developer PC itself, never from the LAN.
+      - "127.0.0.1:9001:9001/tcp"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: creates the private bucket and least-privilege identities for Egress (write) and the API (read/delete).
+  minio-init:
+    image: ${MINIO_MC_IMAGE:-pgsty/mc:RELEASE.2026-09-16T00-00-00Z}
+    restart: "no"
+    logging: *logging
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET:?set S3_BUCKET}
+      EGRESS_ACCESS_KEY: ${MINIO_EGRESS_ACCESS_KEY:?set MINIO_EGRESS_ACCESS_KEY}
+      EGRESS_SECRET_KEY: ${MINIO_EGRESS_SECRET_KEY:?set MINIO_EGRESS_SECRET_KEY}
+      API_ACCESS_KEY: ${MINIO_API_ACCESS_KEY:?set MINIO_API_ACCESS_KEY}
+      API_SECRET_KEY: ${MINIO_API_SECRET_KEY:?set MINIO_API_SECRET_KEY}
+    volumes:
+      - ./infra/minio-init.sh:/minio-init.sh:ro
+    entrypoint: ["/bin/sh", "/minio-init.sh"]
+    networks:
+      - backend
+
+  livekit:
+    image: ${LIVEKIT_IMAGE:?pin a tested LiveKit image}
+    restart: unless-stopped
+    logging: *logging
+    command: ["--config", "/etc/livekit.yaml"]
+    configs:
+      - source: livekit_config
+        target: /etc/livekit.yaml
+    ports:
+      # Signaling (7880) is not published: browsers reach it through Caddy at wss://<host>/livekit.
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+    networks:
+      - realtime
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  egress:
+    image: ${EGRESS_IMAGE:?pin a tested Egress image}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress.yaml
+    configs:
+      - source: egress_config
+        target: /etc/egress.yaml
+    # Chrome (room composite) needs SYS_ADMIN for its sandbox and a larger /dev/shm.
+    cap_add:
+      - SYS_ADMIN
+    shm_size: "1gb"
+    networks:
+      - realtime
+      - backend
+    depends_on:
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: enterprise-comms-demo/api:local
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      NODE_ENV: production
+      API_PORT: "3001"
+      DEMO_HOSTNAME: ${DEMO_HOSTNAME:?set DEMO_HOSTNAME}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      LIVEKIT_API_URL: http://livekit:7880
+      LIVEKIT_PUBLIC_URL: wss://${DEMO_HOSTNAME}/livekit
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET}
+      LIVEKIT_TOKEN_TTL_SECONDS: ${LIVEKIT_TOKEN_TTL_SECONDS:-600}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ACCESS_KEY: ${MINIO_API_ACCESS_KEY}
+      S3_SECRET_KEY: ${MINIO_API_SECRET_KEY}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-12}
+      MAX_PARTICIPANTS_PER_ROOM: ${MAX_PARTICIPANTS_PER_ROOM:-10}
+      MAX_CONCURRENT_RECORDINGS: ${MAX_CONCURRENT_RECORDINGS:-1}
+      RATE_LIMIT_WINDOW_MINUTES: ${RATE_LIMIT_WINDOW_MINUTES:-15}
+      RATE_LIMIT_MAX_FAILURES_PER_USER: ${RATE_LIMIT_MAX_FAILURES_PER_USER:-5}
+      RATE_LIMIT_MAX_FAILURES_PER_IP: ${RATE_LIMIT_MAX_FAILURES_PER_IP:-20}
+      RATE_LIMIT_LOCKOUT_MINUTES: ${RATE_LIMIT_LOCKOUT_MINUTES:-1,5,15}
+      RECORDING_PRESET: ${RECORDING_PRESET:-H264_720P_30}
+      RECORDING_LAYOUT: ${RECORDING_LAYOUT:-speaker}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-Administrator}
+    networks:
+      - backend
+      - realtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      livekit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: enterprise-comms-demo/web:local
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    networks:
+      - realtime
+
+  caddy:
+    image: caddy:2.11.7
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DEMO_HOSTNAME: ${DEMO_HOSTNAME}
+    ports:
+      - "443:443/tcp"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/certs:/certs:ro
+      - caddy_data:/data
+    networks:
+      - realtime
+    depends_on:
+      - api
+      - web
+      - livekit
+
+configs:
+  livekit_config:
+    content: |
+      port: 7880
+      rtc:
+        tcp_port: 7881
+        udp_port: 7882
+        use_external_ip: false
+        # LAN address of the Windows host that clients connect to (Docker Desktop publishes 7881/7882 there).
+        node_ip: ${LIVEKIT_NODE_IP:?set LIVEKIT_NODE_IP to the host LAN IPv4}
+      redis:
+        address: redis:6379
+        password: ${REDIS_PASSWORD}
+      keys:
+        ${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}
+      room:
+        # Rooms are created by the API only, after access checks.
+        auto_create: false
+      webhook:
+        api_key: ${LIVEKIT_API_KEY}
+        urls:
+          - http://api:3001/api/livekit/webhook
+      logging:
+        level: info
+
+  egress_config:
+    content: |
+      api_key: ${LIVEKIT_API_KEY}
+      api_secret: ${LIVEKIT_API_SECRET}
+      ws_url: ws://livekit:7880
+      redis:
+        address: redis:6379
+        password: ${REDIS_PASSWORD}
+      health_port: 8080
+      logging:
+        level: info
+      # Default upload target for file outputs; the API only sends the object key.
+      storage:
+        s3:
+          access_key: ${MINIO_EGRESS_ACCESS_KEY}
+          secret: ${MINIO_EGRESS_SECRET_KEY}
+          region: us-east-1
+          endpoint: http://minio:9000
+          bucket: ${S3_BUCKET}
+          force_path_style: true
+
+networks:
+  backend:
+    internal: true
+  realtime:
+    internal: false
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  caddy_data:

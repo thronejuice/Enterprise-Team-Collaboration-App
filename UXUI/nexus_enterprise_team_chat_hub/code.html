@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "tertiary-fixed": "#d8e2ff",
+        "secondary-fixed-dim": "#4cd7f6",
+        "on-primary-fixed-variant": "#2f2ebe",
+        "error-container": "#93000a",
+        "surface-container-low": "#131b2e",
+        "primary-fixed": "#e1e0ff",
+        "surface-tint": "#c0c1ff",
+        "on-secondary-container": "#00424e",
+        "surface": "#0b1326",
+        "on-secondary-fixed": "#001f26",
+        "on-primary": "#1000a9",
+        "tertiary-fixed-dim": "#adc6ff",
+        "tertiary": "#adc6ff",
+        "on-tertiary-container": "#00285d",
+        "surface-variant": "#2d3449",
+        "primary-fixed-dim": "#c0c1ff",
+        "surface-container-lowest": "#060e20",
+        "on-tertiary-fixed-variant": "#004395",
+        "surface-container": "#171f33",
+        "on-error-container": "#ffdad6",
+        "on-secondary": "#003640",
+        "secondary-fixed": "#acedff",
+        "on-tertiary-fixed": "#001a42",
+        "on-background": "#dae2fd",
+        "tertiary-container": "#4d8eff",
+        "inverse-primary": "#494bd6",
+        "on-surface-variant": "#c7c4d7",
+        "on-primary-container": "#0d0096",
+        "error": "#ffb4ab",
+        "surface-bright": "#31394d",
+        "on-primary-fixed": "#07006c",
+        "surface-container-highest": "#2d3449",
+        "surface-container-high": "#222a3d",
+        "on-surface": "#dae2fd",
+        "outline-variant": "#464554",
+        "primary-container": "#8083ff",
+        "inverse-surface": "#dae2fd",
+        "primary": "#c0c1ff",
+        "surface-dim": "#0b1326",
+        "background": "#0b1326",
+        "on-tertiary": "#002e6a",
+        "outline": "#908fa0",
+        "on-error": "#690005",
+        "on-secondary-fixed-variant": "#004e5c",
+        "secondary": "#4cd7f6",
+        "inverse-on-surface": "#283044",
+        "secondary-container": "#03b5d3"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "margin": "1rem",
+        "margin-desktop": "1.5rem",
+        "space-xl": "1.5rem",
+        "gutter-desktop": "1.5rem",
+        "space-lg": "1rem",
+        "gutter": "1rem",
+        "space-md": "0.75rem",
+        "space-sm": "0.5rem",
+        "space-xs": "0.25rem"
+      },
+      "fontFamily": {
+        "body-lg": ["Inter"],
+        "headline-md": ["Inter"],
+        "label-md": ["Inter"],
+        "headline-lg": ["Inter"],
+        "headline-xl": ["Inter"],
+        "label-sm": ["Inter"],
+        "code-sm": ["Inter"],
+        "label-lg": ["Inter"],
+        "body-sm": ["Inter"],
+        "headline-lg-mobile": ["Inter"],
+        "headline-sm": ["Inter"],
+        "headline-xl-mobile": ["Inter"],
+        "body-md": ["Inter"]
+      },
+      "fontSize": {
+        "body-lg": ["16px", {"lineHeight": "26px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.015em", "fontWeight": "500"}],
+        "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+        "headline-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "700"}],
+        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600"}],
+        "code-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+        "body-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0.005em", "fontWeight": "400"}],
+        "headline-lg-mobile": ["22px", {"lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+        "headline-sm": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+        "headline-xl-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+        "body-md": ["14px", {"lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400"}]
+      }
+    }
+  }
+}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 bottom-0 w-16 bg-surface-container-lowest z-50 flex flex-col items-center justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col items-center gap-space-lg w-full"><a class="flex items-center justify-center p-space-xs" href="#"><img alt="Nexus Enterprise Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJWRx3L4nt3MWsrGQX6Z21F--mC6IvcQParfxl3tq09e2LuywGKfyhPIkm6GC5RIao3Ibw6GF-y2a7yPWx9ypW-hiDfIav0ZpQAY3AdWkh02kRMFJ_eb34vOoYs82kZHT6JO6rWthbFvQvsBEkFbdE7Be4_NNLLrsHvRGLE3SJbE0SIaOrfI0AnKfQGMlLGj-_saIyzbGP09iUc5djyk6k8VEqehplkazUU7YcQGa23xXr-C0e2fHa1Q"/></a><nav class="flex flex-col items-center gap-space-sm w-full px-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-xl"><a class="relative flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="activity-feed" href="#"><span class="material-symbols-outlined text-headline-sm">notifications</span><span class="font-label-sm text-label-sm absolute top-1.5 right-1.5 bg-error text-on-error w-4 h-4 rounded-full flex items-center justify-center">3</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="direct-messages" href="#"><span class="material-symbols-outlined text-headline-sm">chat_bubble</span></a><a aria-current="page" class="flex flex-col items-center justify-center w-12 h-12 transition-colors bg-primary-container text-on-primary-container font-semibold rounded-xl" data-path="channel-chat" href="#"><span class="material-symbols-outlined text-headline-sm">groups</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="calendar-schedule" href="#"><span class="material-symbols-outlined text-headline-sm">calendar_today</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="screen-recordings" href="#"><span class="material-symbols-outlined text-headline-sm">video_library</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="conference-calls" href="#"><span class="material-symbols-outlined text-headline-sm">call</span></a><button class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">more_horiz</span></button></nav></div><div class="flex flex-col items-center gap-space-md w-full px-space-xs"><button class="flex items-center justify-center w-10 h-10 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">settings</span></button><div class="relative flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM38bsEvqXl7NJUlR8UQfDSJuwoPAv5vBUP_lGx8wTRIVlo95zU5A-OAOpCe-_PaON7tSSWKZz73ILntL3UC1k0k6WPjE9Oq7wv-cWyIT4f_4Wtzin09bEu8YUrtbblpRCVgmU567o11yO4OeZYztfN97JRb46-tHVYmVDj_H6vi3SqQsu0jK2ZMDxKTpLTE43zzB5J9wxVhj4hq3IIDaa5UQPcT_JvlcKct9mu0X1AQmVD2EQ24FKNQ"/><span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span></div></div></aside><aside class="fixed left-16 top-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-space-md flex items-center justify-between bg-surface-container-low"><div class="flex items-center gap-space-sm cursor-pointer"><span class="font-headline-sm text-headline-sm text-on-surface">Nexus Tech Org</span><span class="material-symbols-outlined text-on-surface-variant text-label-md">expand_more</span></div><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">edit_square</span></button></div><div class="px-space-md pb-space-sm"><div class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg bg-surface-container text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-label-md">search</span><span class="flex-1 truncate">Search channels...</span><kbd class="font-code-sm text-code-sm bg-surface-container-high px-space-xs rounded text-on-surface-variant">⌘K</kbd></div></div><div class="px-space-md pb-space-sm"><div class="flex items-center bg-surface-container rounded-lg p-0.5"><button class="flex-1 py-1 text-center font-label-sm text-label-sm text-on-primary-container bg-primary-container rounded-md" type="button">All</button><button class="flex-1 py-1 text-center font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" type="button">Unread</button><button class="flex-1 py-1 text-center font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" type="button">Mentions</button></div></div><div class="flex-1 overflow-y-auto px-space-sm py-space-xs flex flex-col gap-space-md"><section><div class="flex items-center justify-between px-space-sm py-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-sm">arrow_drop_down</span>Favorites</span><span class="material-symbols-outlined text-label-sm cursor-pointer">add</span></div><nav class="flex flex-col gap-0.5 mt-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg"><a aria-current="page" class="flex items-center justify-between px-space-sm py-1.5 transition-colors bg-surface-container-high text-on-surface font-semibold rounded-lg" data-path="channel-chat" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">proj-nexus-core</span></div><span class="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-1.5 py-0.2 rounded-full">4</span></a><a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="general-announcements" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">general-announcements</span></div></a></nav></section><section><div class="flex items-center justify-between px-space-sm py-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-sm">arrow_drop_down</span>Engineering Squads</span><span class="material-symbols-outlined text-label-sm cursor-pointer">add</span></div><nav class="flex flex-col gap-0.5 mt-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg"><a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="infra-devops" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">infra-devops</span></div></a><a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="frontend-core" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">frontend-core</span></div></a><a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="backend-api" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">backend-api</span></div></a><a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="qa-automation" href="#"><div class="flex items-center gap-space-sm truncate"><span class="font-code-sm text-code-sm text-outline">#</span><span class="truncate">qa-automation</span></div></a></nav></section><section><div class="flex items-center justify-between px-space-sm py-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-sm">arrow_drop_down</span>Screen Recordings</span><span class="material-symbols-outlined text-label-sm cursor-pointer">add</span></div><nav class="flex flex-col gap-0.5 mt-0.5" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg"><a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm truncate" data-path="clip-sprint-24-demo" href="#"><span class="material-symbols-outlined text-label-md text-secondary">videocam</span><span class="truncate">sprint-24-demo.mp4</span></a><a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm truncate" data-path="clip-bug-report-sync" href="#"><span class="material-symbols-outlined text-label-md text-secondary">videocam</span><span class="truncate">bug-report-sync.mp4</span></a></nav></section></div></aside><div class="pl-80 min-h-screen bg-surface flex flex-col"><header class="fixed top-0 left-80 right-0 h-14 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-30 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md min-w-0 mr-space-md"><div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant shrink-0"><span class="hover:text-on-surface cursor-pointer">Nexus Core</span><span class="text-outline">/</span><span class="text-on-surface font-semibold flex items-center gap-0.5"><span class="font-code-sm text-code-sm text-primary">#</span>proj-nexus-core</span></div><div class="h-4 w-px bg-surface-container-highest shrink-0 hidden sm:block"></div><p class="font-body-sm text-body-sm text-on-surface-variant truncate hidden lg:block">Sprint 24 Production Deployment &amp; Realtime Sync Debugging</p><div class="flex items-center gap-1 font-label-sm text-label-sm text-outline shrink-0 ml-1"><span class="material-symbols-outlined text-label-sm">group</span><span>24</span></div></div><div class="flex items-center gap-space-sm shrink-0"><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg text-on-surface-variant font-body-sm text-body-sm"><span class="material-symbols-outlined text-label-md">search</span><span class="text-outline">Global search...</span></div><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">push_pin</span></button><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">folder</span></button><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-headline-sm">splitscreen</span></button><div class="h-4 w-px bg-surface-container-highest mx-0.5"></div><button class="flex items-center gap-1 px-space-sm py-1 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-fixed-dim transition-colors" type="button"><span class="material-symbols-outlined text-label-md">videocam</span><span>Huddle</span></button></div></header><main class="w-full pt-14 flex-1 bg-surface"><div class="flex flex-col w-full text-on-surface select-none">
+<!-- CHANNEL HEADER ZONE -->
+<div class="relative w-full bg-surface-container-low/90 backdrop-blur-md px-gutter-desktop py-space-md shadow-sm">
+<div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-space-md">
+<!-- Title, Meta, and Members Stack -->
+<div class="flex flex-wrap items-center gap-space-md min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-code-sm text-headline-sm text-primary font-bold">#</span>
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">proj-nexus-core</h1>
+<button class="flex items-center justify-center p-1 rounded-md text-outline hover:text-secondary transition-colors" title="Star channel" type="button">
+<span class="material-symbols-outlined text-headline-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+</div>
+<div class="h-4 w-px bg-surface-container-highest hidden sm:block"></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-xl">
+          Sprint 24 Production Release &amp; Realtime Sync <span class="text-outline mx-1">•</span> <span class="text-secondary-fixed">Lead: Thanapat K.</span>
+</p>
+<!-- Avatars Stack -->
+<div class="flex items-center gap-space-xs pl-space-xs">
+<div class="flex -space-x-2 overflow-hidden">
+<img class="inline-block h-6 w-6 rounded-full object-cover ring-2 ring-surface-container-low" data-alt="Corporate headshot of an Asian male software engineer with glasses, soft dark blue rim lighting, high fidelity team avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuJyqcyiek92X3_qp23XgETRAwg8lJ5muvCwIL0GHVHeiMB7oPtdPSZZfbvMJMFXY6TLQaHjgiQ__D64dYtO05rtp3QIeHjTO-Lz_WobxnLaGPNIT8Y_jQuJ5rSnjfKA9XjwbuMyQevIxCkxEKmZvrEpbKZ0guEPbyxaH_TqqLIhAd3IyFNUxZJx_fNnDoW5WE5eXDjop7cmBaSBs9dwndIPX3xeETjizePWxUN5S94Nn3T67QMAsT5g"/>
+<img class="inline-block h-6 w-6 rounded-full object-cover ring-2 ring-surface-container-low" data-alt="Corporate headshot of an Asian female product manager in slate blazer, modern enterprise dark studio backdrop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnreQL4S6kxTjIqmv291Cd9Yyw14xIv5stR7LaVYrmJioRjrBZThh8a9BuAZ6lmCcdM6tneU7lo_qUGILMucJ32C0k902wQEjiUE5nGkH3msn1Xxqz38eSGvdOHsEOo1NTvIWblEGIx--ipRJ36_v-BsXqIyL_1qb_pTbFwZ83rQdlXM33Cj-Impa945ku1Fk66qOcKJk4WDuOQrJB4Us8ApCTmnozg0QvqEb6FM2WPvftn9MaOC792A"/>
+<img class="inline-block h-6 w-6 rounded-full object-cover ring-2 ring-surface-container-low" data-alt="Corporate headshot of a DevOps engineer with headphones around neck, subtle cyan ambient office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlh6xpSyCrQbIK867_GHbrAZYr49dPpPeLV3osAgsf5Ecl-RxEo0GY8eHU2p_dTF_oOh8LQ2n2haCSrqXlB4BbPsWFxcM6ZB6Vx4lH4g5xoJR7-h5lBtrECSAInTVDA2NdAHjFALwOqiFYNW630hsmxxUzD7y2RABzlUoq4F76u-r-KMD9vqpiCF24z9RF07AzLYZvEzhCXTfLuhnKc8nkGpGAuChD5sZxzGzulCVh_zgCVmvEWAW7xw"/>
+</div>
+<span class="font-label-sm text-label-sm text-outline px-1.5 py-0.5 rounded-full bg-surface-container">24 members</span>
+</div>
+</div>
+<!-- Action Buttons Row (Meet Now, Share Screen, Record) -->
+<div class="flex items-center flex-wrap gap-space-sm shrink-0">
+<!-- Start Meeting / Meet Now Primary Button -->
+<div class="inline-flex rounded-lg shadow-sm">
+<button class="inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-l-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors active:scale-95" type="button">
+<span class="material-symbols-outlined text-label-md">video_call</span>
+<span class="font-semibold tracking-wide">Meet Now</span>
+</button>
+<button class="inline-flex items-center px-1.5 py-1.5 rounded-r-lg bg-primary text-on-primary border-l border-on-primary/20 hover:bg-primary-fixed transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md">expand_more</span>
+</button>
+</div>
+<!-- Share Screen Accent Action -->
+<button class="group relative inline-flex items-center gap-space-xs px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md shadow-sm hover:brightness-110 active:scale-95 transition-all" title="Share your screen directly to channel" type="button">
+<span class="material-symbols-outlined text-label-md transition-transform group-hover:scale-110">screen_share</span>
+<span class="font-semibold">Share Screen</span>
+</button>
+<!-- Record Screen Action Button with pulsing indicator -->
+<button class="group relative inline-flex items-center gap-space-xs px-3 py-1.5 rounded-lg bg-error-container text-on-error-container font-label-md text-label-md shadow-sm hover:brightness-110 active:scale-95 transition-all" title="Record screen clip or asynchronous walkthrough" type="button">
+<span class="relative flex h-2.5 w-2.5 items-center justify-center">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+</span>
+<span class="font-semibold">Record Screen</span>
+</button>
+<div class="h-5 w-px bg-surface-container-highest hidden md:block mx-1"></div>
+<!-- Secondary Utilities -->
+<div class="flex items-center gap-0.5">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Search within channel" type="button">
+<span class="material-symbols-outlined text-label-md">search</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Pinned items (8)" type="button">
+<span class="material-symbols-outlined text-label-md">push_pin</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Toggle right details drawer" type="button">
+<span class="material-symbols-outlined text-label-md">vertical_split</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Channel Tabs -->
+<div class="flex items-center gap-space-lg overflow-x-auto pt-space-md text-label-md font-label-md">
+<button class="relative pb-2 font-semibold text-primary flex items-center gap-1.5 shrink-0" type="button">
+<span class="material-symbols-outlined text-label-md">chat</span>
+        Messages
+        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+</button>
+<button class="pb-2 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 shrink-0 transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md">folder_open</span>
+        Files &amp; Specs
+        <span class="px-1.5 py-0.2 bg-surface-container-high rounded text-label-sm font-label-sm">18</span>
+</button>
+<button class="pb-2 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 shrink-0 transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md text-secondary">videocam</span>
+        Screen Recordings &amp; Clips
+        <span class="px-1.5 py-0.2 bg-secondary/15 text-secondary-fixed rounded text-label-sm font-label-sm">6</span>
+</button>
+<button class="pb-2 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 shrink-0 transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md text-secondary-container">sync_alt</span>
+        CI/CD Pipelines
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-surface-container-high text-label-sm font-label-sm rounded text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          Live: Passing
+        </span>
+</button>
+<button class="pb-2 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 shrink-0 transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md">draw</span>
+        Whiteboard Canvas
+      </button>
+</div>
+</div>
+<!-- FLOATING HUD / LIVE SCREEN SHARE BANNER -->
+<div class="px-gutter-desktop pt-space-md">
+<div class="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-md">
+<div class="flex items-center gap-space-md">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container-lowest shrink-0">
+<span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-secondary opacity-75"></span>
+<span class="material-symbols-outlined text-headline-sm text-secondary">cast</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm bg-error/20 text-error px-1.5 py-0.2 rounded font-semibold uppercase">Channel Alert</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Live Screen Share &amp; Huddle active</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            3 engineers currently in audio room. Click <span class="text-secondary font-medium">Share Screen</span> in top bar or drop into room directly.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm w-full md:w-auto justify-end">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-highest transition-colors" type="button">
+          Ignore
+        </button>
+<button class="px-3.5 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-label-md">headset_mic</span>
+          Join Huddle (3)
+        </button>
+</div>
+</div>
+</div>
+<!-- MAIN CHAT STREAM CONTAINER -->
+<div class="px-gutter-desktop py-space-md flex flex-col gap-space-lg">
+<!-- PINNED SYSTEM BANNER -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container p-space-md shadow-sm">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-error text-headline-md shrink-0 mt-0.5">warning</span>
+<div class="space-y-0.5">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm font-semibold tracking-wider uppercase text-error">Deployment Critical</span>
+<span class="text-outline">•</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-secondary px-1.5 py-0.5 rounded font-mono">v2.4.0-rc3</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface font-medium">
+              Production Deployment Window: <span class="text-primary font-semibold">22:00 – 23:30 UTC+7</span>
+<span class="text-outline mx-1.5">|</span>
+              Status: <span class="text-secondary font-semibold">Staging Verified (Green)</span>
+</p>
+</div>
+</div>
+<a class="inline-flex items-center gap-1 font-label-md text-label-md text-primary hover:text-primary-fixed shrink-0 font-medium transition-colors" href="#">
+          View Deployment Checklist
+          <span class="material-symbols-outlined text-label-md">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- DATE SEPARATOR -->
+<div class="flex items-center gap-space-md my-space-xs">
+<div class="h-px bg-surface-container-highest flex-1"></div>
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider bg-surface px-space-sm rounded-full">Today, 24 October</span>
+<div class="h-px bg-surface-container-highest flex-1"></div>
+</div>
+<!-- MESSAGE FEED ITEMS -->
+<div class="flex flex-col gap-space-xl">
+<!-- MESSAGE 1: Lead DevOps - Somchai P. -->
+<article class="group relative flex items-start gap-space-md p-space-sm -mx-space-sm rounded-xl hover:bg-surface-container-low transition-colors">
+<img class="w-10 h-10 rounded-full object-cover shrink-0" data-alt="Profile photo of Thai DevOps lead engineer in black crewneck shirt with server room light reflection behind him" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxZEwL__VPfnOipSC3Qu1n0edrRJhwghd2AzVrsg_rY4d69jxbFlWpc_yVMAg3i5982zljzCfMN7xJN97nIk1Sav3zyo-1_YaALjo5VwLcSpISawPHDoyjqAyMQ8KhZW7kOWnnKpsiZfc5q4vJnotnuI5a4qJ2eVSmEKZItFMvnvnlo1mHqJvB5Pt8vND2dhXI3EZoYvSqqaktJfQnNKkoNcxT0p3MUL3ZERpB8gs60mzMUOtz2DYrKQ"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Somchai Prasert</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-1.5 py-0.2 rounded font-medium">Lead DevOps</span>
+<span class="font-body-sm text-body-sm text-outline">14:15</span>
+</div>
+<div class="mt-space-xs font-body-md text-body-md text-on-surface leading-relaxed">
+            สวัสดีครับทีม <span class="inline-flex px-1.5 py-0.2 rounded bg-primary/20 text-primary font-medium">@all</span>
+            อัปเดต pipeline build สำหรับ <code class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded text-secondary font-mono">v2.4.0-rc3</code>
+            ผ่าน automated test ทั้งหมดแล้วครับ แต่เจอบั๊ก memory spike เล็กน้อยตอน simulate websocket 10,000 CCU กำลังเร่งตรวจสอบครับ
+          </div>
+<!-- Embedded Code Snippet Card -->
+<div class="mt-space-sm rounded-xl bg-surface-container-lowest p-space-md max-w-2xl shadow-inner">
+<div class="flex items-center justify-between pb-space-xs mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-label-md">integration_instructions</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">k8s/nexus-gateway-deployment.yaml</span>
+</div>
+<span class="font-label-sm text-label-sm bg-error-container/40 text-error px-2 py-0.5 rounded-full font-semibold">
+                Pending Optimization
+              </span>
+</div>
+<pre class="font-code-sm text-code-sm text-on-surface-variant overflow-x-auto leading-5 font-mono"><span class="text-outline">1</span>  apiVersion: apps/v1
+<span class="text-outline">2</span>  kind: Deployment
+<span class="text-outline">3</span>  metadata:
+<span class="text-outline">4</span>    name: nexus-realtime-gateway
+<span class="text-outline">5</span>  spec:
+<span class="text-outline">6</span>    replicas: 8
+<span class="text-outline">7</span>    resources:
+<span class="text-outline">8</span>      limits:
+<span class="text-outline">9</span>        memory: <span class="text-secondary">"4Gi"</span> <span class="text-error"># Spike hit 3.92Gi during broadcast spike</span></pre>
+</div>
+</div>
+<!-- Floating Quick Hover Actions -->
+<div class="absolute right-space-md top-space-xs hidden group-hover:flex items-center gap-0.5 bg-surface-container-highest px-1 py-0.5 rounded-lg shadow-md">
+<button class="p-1 hover:text-primary text-on-surface-variant rounded transition-colors" type="button"><span class="material-symbols-outlined text-label-md">add_reaction</span></button>
+<button class="p-1 hover:text-primary text-on-surface-variant rounded transition-colors" type="button"><span class="material-symbols-outlined text-label-md">reply</span></button>
+<button class="p-1 hover:text-primary text-on-surface-variant rounded transition-colors" type="button"><span class="material-symbols-outlined text-label-md">bookmark</span></button>
+</div>
+</article>
+<!-- MESSAGE 2: Frontend Tech Lead - Thanapat K. with RICH SCREEN RECORDING -->
+<article class="group relative flex items-start gap-space-md p-space-sm -mx-space-sm rounded-xl hover:bg-surface-container-low transition-colors">
+<img class="w-10 h-10 rounded-full object-cover shrink-0" data-alt="Portrait of Thanapat, Frontend Tech Lead, modern glasses, high clarity, corporate developer portrait with soft ambient violet light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVwtlAzaOHlYgtbbHXHCBUB21-qgZB5Xzw-N9OGZmr1UKXD8X2jOI20JxokIBlu_RMS6C2eqcRZN0u-vCMjZbxkoOCnUkWad7r9-tUMMTdLGvT7zM38zuf5hH5ycIltx5BL7xrGqEOsV0nDIvUcUsnFLgG8znOdNO3QMNIpgTwt4xr9XgRkIIqhW0RdXiYaQd6-DqWnoLej5miReEBIEG9ZUFoLnP721kiPVOZYvEtUBTW3pckZ42k0g"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Thanapat Kanok</span>
+<span class="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-1.5 py-0.2 rounded font-semibold">Frontend Tech Lead</span>
+<span class="font-body-sm text-body-sm text-outline">14:22</span>
+</div>
+<p class="mt-space-xs font-body-md text-body-md text-on-surface leading-relaxed">
+            ผมลอง reproduce อาการฝั่ง Client พบว่ามีจังหวะ Re-render ถี่เกินไปตอน sync state ครับ อัดคลิปหน้าจอและ Profile memory ให้ดูในคลิปนี้แล้วครับ:
+          </p>
+<!-- Rich Screen Recording Media Card -->
+<div class="mt-space-md rounded-2xl bg-surface-container max-w-3xl overflow-hidden shadow-lg">
+<!-- Video Thumbnail Header & Stage -->
+<div class="relative w-full aspect-video max-h-72 bg-surface-container-lowest overflow-hidden flex items-center justify-center group/video cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover/video:scale-105" data-alt="High resolution screen recording frame of Chrome DevTools Memory Heap snapshot and React component tree profiler showing flame graph re-render spikes in deep blue slate UI theme" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC19IB7S5KbyJk0-iahMUVQD18wfVkndZwigRP-Xa4qSmsmt2xi7AjPvBe5i2NlhfQQn1cFqC8qunh6DRLqYWB9SVZzYkq345S9q1vK0jwJ9d1FG5gLebiqAYnwM8uwmpQVYqUPhuGKGfUJE8F3N2xcc9e8lIvmg6ZqWxGyqyH2_xL4JYrQcFIH4F1wiwwrgUEGhjWZuSWTMmIqkV-5pG1xFQohXay-CE3CccZHkYBELh6x4s9g4jkoNg"/>
+<!-- Overlay Gradient Scrim -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/30 to-transparent"></div>
+<!-- Center Big Play Button -->
+<div class="relative z-10 w-14 h-14 rounded-full bg-primary/90 text-on-primary flex items-center justify-center shadow-xl group-hover/video:scale-110 group-hover/video:bg-primary transition-all">
+<span class="material-symbols-outlined text-headline-xl pl-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<!-- Top Left Recording Tag -->
+<div class="absolute top-space-md left-space-md flex items-center gap-space-xs px-2.5 py-1 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+<span class="font-label-sm text-label-sm font-semibold tracking-wider uppercase text-on-surface">Nexus Screen Capture</span>
+</div>
+<!-- Bottom Indicators (Duration, Resolution, Audio) -->
+<div class="absolute bottom-space-md left-space-md right-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-lowest/90 font-mono text-on-surface font-semibold">03:42</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-lowest/90 text-secondary font-mono font-semibold">1080p 60fps</span>
+</div>
+<!-- Mini Audio Waveform Simulation -->
+<div class="flex items-center gap-0.5 h-4 px-2 py-1 rounded bg-surface-container-lowest/90">
+<span class="w-0.5 h-2 bg-secondary rounded-full"></span>
+<span class="w-0.5 h-3.5 bg-secondary rounded-full"></span>
+<span class="w-0.5 h-1.5 bg-secondary rounded-full"></span>
+<span class="w-0.5 h-3 bg-secondary rounded-full"></span>
+<span class="w-0.5 h-2.5 bg-secondary rounded-full"></span>
+</div>
+</div>
+</div>
+<!-- Media Details & Actions Body -->
+<div class="p-space-md flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+<div class="min-w-0">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">
+                    Screen Recording: Nexus Client Memory Profile &amp; Websocket Re-render Spike.mp4
+                  </h2>
+<div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant flex-wrap mt-0.5">
+<span>Recorded via Nexus Screen Recorder</span>
+<span>•</span>
+<span class="font-mono text-outline">48.2 MB</span>
+<span>•</span>
+<span>By Thanapat K.</span>
+</div>
+</div>
+<!-- Video Interactive Buttons -->
+<div class="flex items-center gap-space-xs shrink-0 pt-space-xs sm:pt-0">
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md">play_circle</span>
+                    Play in App
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Download video file" type="button">
+<span class="material-symbols-outlined text-label-md">download</span>
+</button>
+<button class="p-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Copy shareable link" type="button">
+<span class="material-symbols-outlined text-label-md">link</span>
+</button>
+</div>
+</div>
+<!-- AI Automated Summary Panel -->
+<div class="rounded-xl bg-surface-container-low p-space-md space-y-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-label-md">auto_awesome</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-secondary">AI Instant Summary &amp; Transcript</span>
+</div>
+<button class="font-label-sm text-label-sm text-primary hover:underline" type="button">Full Transcript</button>
+</div>
+<ul class="space-y-1 font-body-sm text-body-sm text-on-surface-variant pl-space-sm list-disc">
+<li><strong class="text-on-surface">Virtual list dropped frames:</strong> Observed at 8,200 events during bulk cursor updates.</li>
+<li><strong class="text-on-surface">Proposed remediation:</strong> Debounce state dispatch on cursor tracking to 16ms clamp window.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- MESSAGE 3: Product Manager - Nattaya V. -->
+<article class="group relative flex items-start gap-space-md p-space-sm -mx-space-sm rounded-xl hover:bg-surface-container-low transition-colors">
+<img class="w-10 h-10 rounded-full object-cover shrink-0" data-alt="Corporate headshot of Thai Product Manager Nattaya V. in elegant professional attire, dark cinematic background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL1vIsn62hL3ZL2B31iItLbISgnEVtbKJIKyHWR_fkAo8WLPPPG2cwn7D-wh05hpTArDw1wAUNqp8ODYp_SHv7gwQfAEHSkNm_VqvRCb0NIOuRSX_V2vN8QOtaNwq5DhAhpudUgS9u62Cqz4p85_sQ5C5oFjgG2lhApSIHhK7lhJvjlRQVhz2upJA0XPxUatDtNkDWlyv6jks2ZxtCzjsH-2nVJ5tGZ2Jhr5xACctPr4liEKHw30ajUg"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Nattaya Vorarat</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-1.5 py-0.2 rounded font-medium">Product Lead</span>
+<span class="font-body-sm text-body-sm text-outline">14:30</span>
+</div>
+<p class="mt-space-xs font-body-md text-body-md text-on-surface leading-relaxed">
+            ขอบคุณมากครับ <span class="inline-flex px-1.5 py-0.2 rounded bg-primary/20 text-primary font-medium">@Thanapat</span>
+            เดี๋ยวหลังประชุม Daily Standup 15:00 น. รบกวนกด <strong class="text-secondary font-semibold">[Share Screen]</strong> ผ่านห้องนี้เพื่อ walk-through โค้ดที่แก้ให้ทีมฟังประมาณ 10 นาทีนะครับ
+          </p>
+</div>
+</article>
+<!-- MESSAGE 4: Backend Engineer - Anan R. with Reactions -->
+<article class="group relative flex items-start gap-space-md p-space-sm -mx-space-sm rounded-xl hover:bg-surface-container-low transition-colors">
+<img class="w-10 h-10 rounded-full object-cover shrink-0" data-alt="Portrait of Anan R., Backend Systems Engineer, minimal navy background, warm professional studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqxBPCMF4IjkStcOqz0T9Mv3Gn6AZO6GRJb44GOxLNP80kXCkBNHJ5wbwZSr6en9AKaCVc8f5OCXBhu1iTV9sh7-3t2xs0yo00-iYpUE50vzkOxj36HM0BFzbUUF-FhUSK3RX1SYfdNyXtTChw5awQmIJCze_P2waj7to93okt6UdptVcfMXzjODhZx0h9T8Ij-ugtxOGugXjFD4Ba5_b9ti-MwKHP3D2jFjOxg0Lq0s46Qzvr8SbSSg"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Anan Rattanaporn</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-1.5 py-0.2 rounded font-medium">Staff Backend Engineer</span>
+<span class="font-body-sm text-body-sm text-outline">14:35</span>
+</div>
+<p class="mt-space-xs font-body-md text-body-md text-on-surface leading-relaxed">
+            รับทราบครับ เดี๋ยวผมเตรียม PR ฝั่ง Gateway รอไว้เลยครับ ตอนนี้ patch config connection pool เรียบร้อยแล้ว 👍
+          </p>
+<!-- Reactions Group -->
+<div class="flex items-center gap-space-xs mt-space-sm flex-wrap">
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-body-sm font-body-sm text-on-surface hover:bg-surface-container-high transition-colors" type="button">
+<span>👍</span>
+<span class="font-semibold text-primary">6</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-body-sm font-body-sm text-on-surface hover:bg-surface-container-high transition-colors" type="button">
+<span>🚀</span>
+<span class="font-semibold text-secondary">8</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-body-sm font-body-sm text-on-surface hover:bg-surface-container-high transition-colors" type="button">
+<span>💻</span>
+<span class="font-semibold text-on-surface">4</span>
+</button>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" title="Add reaction" type="button">
+<span class="material-symbols-outlined text-label-md">add_reaction</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</div>
+<!-- BOTTOM RICH CHAT INPUT AREA -->
+<div class="sticky bottom-0 left-0 right-0 p-gutter-desktop pt-0 bg-gradient-to-t from-surface via-surface to-transparent">
+<div class="w-full rounded-2xl bg-surface-container-high shadow-xl p-space-md flex flex-col gap-space-xs">
+<!-- Formatting Toolbar -->
+<div class="flex items-center gap-1 pb-space-xs text-on-surface-variant flex-wrap">
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Bold" type="button">
+<span class="material-symbols-outlined text-label-md">format_bold</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Italic" type="button">
+<span class="material-symbols-outlined text-label-md">format_italic</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Code snippet" type="button">
+<span class="material-symbols-outlined text-label-md">code</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Bulleted list" type="button">
+<span class="material-symbols-outlined text-label-md">format_list_bulleted</span>
+</button>
+<div class="h-4 w-px bg-surface-container-highest mx-1"></div>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Insert link" type="button">
+<span class="material-symbols-outlined text-label-md">link</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Mention team member" type="button">
+<span class="material-symbols-outlined text-label-md">alternate_email</span>
+</button>
+</div>
+<!-- Text Input Field -->
+<div class="relative">
+<textarea class="w-full bg-transparent text-body-md font-body-md text-on-surface placeholder-outline focus:outline-none resize-none leading-relaxed" placeholder="Type a message in #proj-nexus-core, use @ to mention, or / for slash commands..." rows="2"></textarea>
+</div>
+<!-- Bottom Utilities & Send Area -->
+<div class="flex items-center justify-between pt-space-xs flex-wrap gap-space-sm">
+<div class="flex items-center gap-0.5 text-on-surface-variant flex-wrap">
+<button class="p-1.5 rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" title="Attach file" type="button">
+<span class="material-symbols-outlined text-headline-sm">attach_file</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" title="Emoji" type="button">
+<span class="material-symbols-outlined text-headline-sm">sentiment_satisfied</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" title="GIF" type="button">
+<span class="material-symbols-outlined text-headline-sm">gif_box</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" title="Code snippet" type="button">
+<span class="material-symbols-outlined text-headline-sm">terminal</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container hover:text-on-surface transition-colors" title="Voice note" type="button">
+<span class="material-symbols-outlined text-headline-sm">mic</span>
+</button>
+<div class="h-4 w-px bg-surface-container-highest mx-1 hidden sm:block"></div>
+<!-- Quick Clip Record Shortcut Pill -->
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container text-error font-label-sm text-label-sm hover:bg-error-container/20 transition-colors" type="button">
+<span class="material-symbols-outlined text-label-md">fiber_manual_record</span>
+<span>Quick Clip</span>
+</button>
+</div>
+<!-- Right Aligned Submit Button -->
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-all shadow-md active:scale-95" type="button">
+<span class="font-semibold">Send</span>
+<span class="material-symbols-outlined text-label-md">keyboard_return</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

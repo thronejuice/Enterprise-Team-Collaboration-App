@@ -1,0 +1,38 @@
+{
+	# HTTPS only on 443 with the mkcert/company certificate; no ACME, no port-80 redirect listener.
+	auto_https disable_redirects
+	admin off
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$DEMO_HOSTNAME}:443 {
+	tls /certs/cert.pem /certs/key.pem
+
+	header {
+		Strict-Transport-Security "max-age=86400"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		Permissions-Policy "camera=(self), microphone=(self), display-capture=(self)"
+		-Server
+	}
+
+	# LiveKit webhooks are internal only (LiveKit -> api on the Docker network).
+	@webhook path /api/livekit/webhook*
+	respond @webhook 404
+
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# LiveKit signaling over the same trusted hostname: wss://<host>/livekit/rtc -> livekit:7880/rtc
+	handle_path /livekit/* {
+		reverse_proxy livekit:7880
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

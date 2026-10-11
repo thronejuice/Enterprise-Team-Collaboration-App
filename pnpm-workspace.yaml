@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - tests/e2e
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  - argon2
+  - "@nestjs/core"
+  - sharp
+  - unrs-resolver
