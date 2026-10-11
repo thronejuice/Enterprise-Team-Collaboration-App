@@ -75,7 +75,7 @@ export class AuthController {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.rateLimit.recordSuccess(limits);
+    await this.rateLimit.recordSuccess([limits[0]]);
     const token = await this.sessions.create(user.id);
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
