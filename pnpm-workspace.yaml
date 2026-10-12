@@ -11,3 +11,4 @@ onlyBuiltDependencies:
 # Next.js pulls in sharp (and its LGPL libvips binary) only for next/image optimisation, which this app does not use.
 overrides:
   sharp: "-"
+  deepmerge-ts: "8.0.0"
