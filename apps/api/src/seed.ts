@@ -5,15 +5,20 @@ import { hashPassword, MIN_PASSWORD_LENGTH } from './auth/passwords';
 async function main() {
   const prisma = new PrismaClient();
   try {
-    const admins = await prisma.user.count({ where: { role: 'ADMIN' } });
+    // Only an admin who can actually sign in counts: if every admin is suspended or anonymized,
+    // setting ADMIN_EMAIL / ADMIN_PASSWORD and restarting creates a new one (see docs/SETUP.md).
+    const admins = await prisma.user.count({ where: { role: 'ADMIN', isActive: true, anonymizedAt: null } });
     if (admins > 0) {
-      console.log('[seed] admin already exists; skipping');
+      console.log('[seed] an active admin already exists; skipping');
       return;
     }
     const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const password = process.env.ADMIN_PASSWORD ?? '';
     if (!email || password.length < MIN_PASSWORD_LENGTH) {
       throw new Error(`Set ADMIN_EMAIL and ADMIN_PASSWORD (at least ${MIN_PASSWORD_LENGTH} characters) to create the first admin`);
+    }
+    if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {
+      throw new Error(`No active admin exists, and ${email} is already an account. Set ADMIN_EMAIL to an unused address to create a new admin`);
     }
     await prisma.user.create({
       data: {

@@ -112,6 +112,17 @@ E2E ใช้ fake capture จึงพิสูจน์แค่ว่า layo
 | ทุกคนโดน "Too many attempts" พร้อมกัน | Docker Desktop ทำให้ทุก client มี IP เดียวกัน → limit ต่อ IP กลายเป็นของรวม ตั้ง `RATE_LIMIT_MAX_FAILURES_PER_IP=0` เพื่อปิด แล้ว `docker compose up -d api` |
 | MinIO Console | `http://localhost:9001` บนเครื่อง dev เท่านั้น (bind 127.0.0.1) |
 
+### กู้ระบบเมื่อไม่เหลือ Admin ที่ใช้งานได้
+
+ระบบกันไม่ให้ระงับหรือลด role ของ Admin คนสุดท้าย แต่ถ้าเกิดขึ้นได้ (เช่น แก้ฐานข้อมูลเอง) ให้กู้ด้วยการสร้าง Admin ใหม่ตอนเริ่มระบบ:
+
+1. ใน `.env` ตั้ง `ADMIN_EMAIL` เป็นอีเมลที่**ยังไม่มีบัญชี** และตั้ง `ADMIN_PASSWORD` (อย่างน้อย 10 ตัว)
+2. `docker compose up -d api` (ตอนเริ่ม `seed` จะสร้าง Admin ให้เมื่อไม่มี Admin ที่ active และยังไม่ถูก anonymize)
+3. ล็อกอินด้วยบัญชีนั้น แล้วเปิดคืนหรือแก้ Admin คนเดิมที่หน้า Users
+4. เปลี่ยน `ADMIN_PASSWORD` หรือถอดออกจาก `.env` เมื่อเสร็จ
+
+ถ้า `ADMIN_EMAIL` ตรงกับบัญชีที่มีอยู่แล้ว seed จะหยุดพร้อมข้อความบอกให้ใช้อีเมลอื่น
+
 ## 10. หยุดระบบ / ล้างข้อมูล
 
     docker compose down            # หยุด เก็บข้อมูลไว้ (DB, recordings)

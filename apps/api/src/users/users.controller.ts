@@ -19,6 +19,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SuspensionReason, UserRole } from '@prisma/client';
+import { SORTS, StatusFilter, UserListQuery } from './queries';
 import type { Prisma } from '@prisma/client';
 import { IsEmail, IsEnum, IsOptional, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
 import type { Response } from 'express';
@@ -33,7 +34,7 @@ import { AuthUser, ClientIp, CurrentUser } from '../common/request';
 import { AvatarService } from './avatar.service';
 import { ImportService, IMPORT_MAX_BYTES } from './import.service';
 import { accountStatus, asBadRequest, avatarVersionOf, CSV_BOM, csvLine, NAME_MAX, normalizeEmail, normalizeEmployeeId, normalizePhone, optionalText, requiredText, USERS_PAGE_SIZE } from './profile';
-import { SuspensionService } from './suspension.service';
+import { assertAdminRemains, SuspensionService } from './suspension.service';
 import { departmentView, profileView, userInclude, UserWithDepartment } from './views';
 
 class CreateUserDto {
@@ -176,28 +177,8 @@ class CommitImportDto {
   importId: string;
 }
 
-const SORTS: Record<string, Prisma.UserOrderByWithRelationInput> = {
-  name: { displayName: 'asc' },
-  '-name': { displayName: 'desc' },
-  lastLogin: { lastLoginAt: 'asc' },
-  '-lastLogin': { lastLoginAt: 'desc' },
-  createdAt: { createdAt: 'asc' },
-  '-createdAt': { createdAt: 'desc' },
-};
-
-const STATUSES = ['ACTIVE', 'LEAVING', 'SUSPENDED', 'ANONYMIZED'] as const;
-type StatusFilter = (typeof STATUSES)[number];
-
-export interface UserFilters {
-  q?: string;
-  role?: string;
-  status?: string;
-  departmentId?: string;
-  sort?: string;
-}
-
 /** Filters shared by the table and the CSV export, so both show the same people. */
-export function buildUserWhere(filters: UserFilters): Prisma.UserWhereInput {
+export function buildUserWhere(filters: Pick<UserListQuery, 'q' | 'role' | 'status' | 'departmentId'>): Prisma.UserWhereInput {
   const and: Prisma.UserWhereInput[] = [];
   const q = filters.q?.trim();
   if (q) {
@@ -211,15 +192,9 @@ export function buildUserWhere(filters: UserFilters): Prisma.UserWhereInput {
       ],
     });
   }
-  if (filters.role) {
-    if (!(filters.role in UserRole)) throw new BadRequestException('role must be ADMIN, HOST or MEMBER');
-    and.push({ role: filters.role as UserRole });
-  }
+  if (filters.role) and.push({ role: filters.role });
   if (filters.departmentId) and.push({ departmentId: filters.departmentId });
-  if (filters.status) {
-    if (!STATUSES.includes(filters.status as StatusFilter)) throw new BadRequestException('Unknown status filter');
-    and.push(statusWhere(filters.status as StatusFilter));
-  }
+  if (filters.status) and.push(statusWhere(filters.status));
   return and.length ? { AND: and } : {};
 }
 
@@ -256,18 +231,10 @@ export class UsersController {
   ) {}
 
   @Get()
-  async list(
-    @Query('q') q?: string,
-    @Query('role') role?: string,
-    @Query('status') status?: string,
-    @Query('departmentId') departmentId?: string,
-    @Query('sort') sort?: string,
-    @Query('page') pageRaw?: string,
-  ) {
-    const filters: UserFilters = { q, role, status, departmentId, sort };
-    const page = Math.max(Number.parseInt(pageRaw ?? '1', 10) || 1, 1);
-    const where = buildUserWhere(filters);
-    const orderBy = SORTS[sort ?? 'createdAt'] ?? SORTS.createdAt;
+  async list(@Query() query: UserListQuery) {
+    const page = query.page ?? 1;
+    const where = buildUserWhere(query);
+    const orderBy = SORTS[query.sort ?? 'createdAt'];
     const [total, rows] = await Promise.all([
       this.prisma.user.count({ where }),
       this.prisma.user.findMany({
@@ -285,16 +252,14 @@ export class UsersController {
 
   @Get('export.csv')
   async exportCsv(
-    @Query() query: UserFilters,
+    @Query() query: UserListQuery,
     @CurrentUser() admin: AuthUser,
     @ClientIp() ip: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const filters = query;
-    const sort = filters.sort;
     const rows = await this.prisma.user.findMany({
-      where: buildUserWhere(filters),
-      orderBy: SORTS[sort ?? 'createdAt'] ?? SORTS.createdAt,
+      where: buildUserWhere(query),
+      orderBy: SORTS[query.sort ?? 'createdAt'],
       include: { ...userInclude, suspensions: openSuspensionSelect },
     });
     const header = ['employee_id', 'email', 'display_name', 'first_name', 'last_name', 'job_title', 'department', 'phone', 'role', 'status', 'suspension_reason', 'effective_at', 'last_login_at', 'created_at'];
@@ -320,7 +285,7 @@ export class UsersController {
         ]),
       );
     }
-    await this.audit.log({ action: 'users.exported', actorId: admin.id, ip, metadata: { filters, rows: rows.length } });
+    await this.audit.log({ action: 'users.exported', actorId: admin.id, ip, metadata: { filters: { q: query.q, role: query.role, status: query.status, departmentId: query.departmentId, sort: query.sort }, rows: rows.length } });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="users-${new Date().toISOString().slice(0, 10)}.csv"`);
     res.setHeader('Cache-Control', 'no-store');
@@ -335,10 +300,10 @@ export class UsersController {
   }
 
   @Post('import/preview')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMPORT_MAX_BYTES, files: 1 } }))
-  async previewImport(@UploadedFile() file: Express.Multer.File | undefined) {
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMPORT_MAX_BYTES, files: 1, fields: 0, parts: 1 } }))
+  async previewImport(@CurrentUser() admin: AuthUser, @UploadedFile() file: Express.Multer.File | undefined) {
     if (!file) throw new BadRequestException('Attach a CSV file in the "file" field.');
-    return this.imports.preview(file.buffer.toString('utf8'));
+    return this.imports.preview(admin.id, file.buffer.toString('utf8'));
   }
 
   @Post('import/commit')
@@ -410,7 +375,9 @@ export class UsersController {
     await this.assertDepartmentUsable(dto.departmentId);
 
     const data: Prisma.UserUpdateInput = {};
-    const changes: Record<string, unknown> = {};
+    // Audit keeps WHICH fields changed, not their personal values (PDPA); role, department and the email change are not that kind of data.
+    const fields: string[] = [];
+    const auditValues: Record<string, unknown> = {};
     asBadRequest(() => {
       if (dto.displayName !== undefined) data.displayName = requiredText('displayName', dto.displayName, 80);
       if (dto.firstName !== undefined) data.firstName = optionalText('firstName', dto.firstName, NAME_MAX);
@@ -421,29 +388,35 @@ export class UsersController {
     });
     if (dto.departmentId !== undefined) {
       data.department = dto.departmentId ? { connect: { id: dto.departmentId } } : { disconnect: true };
-      changes.departmentId = dto.departmentId;
+      fields.push('departmentId');
+      auditValues.departmentId = dto.departmentId;
     }
     if (dto.role !== undefined) {
       data.role = dto.role;
-      changes.role = dto.role;
+      fields.push('role');
+      auditValues.role = dto.role;
     }
     if (dto.email !== undefined) {
       const email = normalizeEmail(dto.email);
       if (email !== existing.email) {
         data.email = email;
-        changes.emailFrom = existing.email;
-        changes.emailTo = email;
+        fields.push('email');
+        auditValues.emailFrom = existing.email;
+        auditValues.emailTo = email;
       }
     }
-    // Simple fields are recorded as they were set; the email change keeps both sides (emailFrom/emailTo).
     for (const key of ['displayName', 'firstName', 'lastName', 'jobTitle', 'phone', 'employeeId'] as const) {
-      if (key in data) changes[key] = data[key];
+      if (key in data) fields.push(key);
     }
 
     try {
-      const user = await this.prisma.user.update({ where: { id }, data, include: userInclude });
-      if (Object.keys(changes).length > 0) {
-        await this.audit.log({ action: 'user.updated', actorId: admin.id, targetType: 'user', targetId: id, ip, metadata: { changes } });
+      const user = await this.prisma.$transaction(async (tx) => {
+        // Demoting an admin can leave the system without one: serialise and re-check under the admin lock.
+        if (existing.role === 'ADMIN' && dto.role !== undefined && dto.role !== 'ADMIN') await assertAdminRemains(tx, id);
+        return tx.user.update({ where: { id }, data, include: userInclude });
+      });
+      if (fields.length > 0) {
+        await this.audit.log({ action: 'user.updated', actorId: admin.id, targetType: 'user', targetId: id, ip, metadata: { fields, ...auditValues } });
       }
       return profileView(user);
     } catch (error) {

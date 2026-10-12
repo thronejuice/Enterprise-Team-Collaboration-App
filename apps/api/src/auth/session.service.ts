@@ -37,7 +37,7 @@ const LAST_SEEN_RESOLUTION_MS = 60_000;
 /** "Chrome on Windows", "Safari on iOS", or "Unknown device" when there is nothing to parse. */
 export function deviceLabel(userAgent?: string): string {
   if (!userAgent) return 'Unknown device';
-  const result = UAParser(userAgent);
+  const result = new UAParser(userAgent).getResult();
   const browser = result.browser.name;
   const os = result.os.name;
   if (browser && os) return `${browser} on ${os}`;
@@ -83,7 +83,8 @@ export class SessionService {
     const seen = data.lastSeenAt ? Date.parse(data.lastSeenAt) : 0;
     if (Date.now() - seen >= LAST_SEEN_RESOLUTION_MS) {
       data.lastSeenAt = new Date().toISOString();
-      multi.set(key, JSON.stringify(data), 'KEEPTTL');
+      // XX: only update a session that still exists, so a concurrent revoke cannot be undone (and never loses its TTL)
+      multi.set(key, JSON.stringify(data), 'KEEPTTL', 'XX');
     }
     await multi.exec();
     return data;
@@ -121,7 +122,7 @@ export class SessionService {
       if (!data.publicId) {
         // Sessions from before 0.1.1 get a stable public id the first time they are listed.
         data.publicId = newPublicId();
-        await this.redis.client.set(`sess:${id}`, JSON.stringify(data), 'KEEPTTL');
+        await this.redis.client.set(`sess:${id}`, JSON.stringify(data), 'KEEPTTL', 'XX');
       }
       items.push({
         publicId: data.publicId,

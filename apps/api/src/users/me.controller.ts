@@ -25,9 +25,14 @@ import type {} from 'multer'; // brings Express.Multer.File into scope
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../common/prisma.service';
 import { AuthUser, ClientIp, CurrentUser } from '../common/request';
+import { RateLimitService } from '../auth/rate-limit.service';
 import { AVATAR_MAX_BYTES, AvatarService } from './avatar.service';
+import { DirectoryQuery } from './queries';
 import { DIRECTORY_PAGE_SIZE, DISPLAY_NAME_MAX, normalizePhone, requiredText } from './profile';
 import { directoryView, profileView, userInclude } from './views';
+
+const AVATAR_ATTEMPTS = 10;
+const AVATAR_LOCKOUT_SECONDS = 10 * 60;
 
 class UpdateProfileDto {
   @IsOptional()
@@ -48,6 +53,7 @@ export class MeController {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly avatars: AvatarService,
+    private readonly rateLimit: RateLimitService,
   ) {}
 
   @Get('me/profile')
@@ -73,9 +79,13 @@ export class MeController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: AVATAR_MAX_BYTES, files: 1 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: AVATAR_MAX_BYTES, files: 1, fields: 0, parts: 1 } }))
   async uploadMyAvatar(@CurrentUser() user: AuthUser, @UploadedFile() file: Express.Multer.File | undefined, @ClientIp() ip: string) {
     if (!file) throw new BadRequestException('Attach an image in the "file" field.');
+    // Every attempt counts (valid or not): 10 per rate-limit window, then a 10 minute lock.
+    const limit = { scope: 'avatar-user', key: user.id, maxFailures: AVATAR_ATTEMPTS, lockoutSeconds: [AVATAR_LOCKOUT_SECONDS] };
+    await this.rateLimit.assertNotLocked([limit]);
+    await this.rateLimit.recordFailure([limit]);
     const normalized = await this.avatars.normalize(file.buffer);
     const key = await this.avatars.upload(user.id, normalized);
     const before = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { avatarKey: true } });
@@ -96,9 +106,10 @@ export class MeController {
 
   /** Active, non-anonymized accounts only. Phone, employee ID, role and suspension state are never included. */
   @Get('directory')
-  async directory(@Query('q') q?: string, @Query('departmentId') departmentId?: string, @Query('page') pageRaw?: string) {
-    const page = Math.max(Number.parseInt(pageRaw ?? '1', 10) || 1, 1);
-    const term = q?.trim();
+  async directory(@Query() query: DirectoryQuery) {
+    const { departmentId } = query;
+    const page = query.page ?? 1;
+    const term = query.q?.trim();
     const where: Prisma.UserWhereInput = {
       isActive: true,
       anonymizedAt: null,

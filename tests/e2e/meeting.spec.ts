@@ -86,9 +86,9 @@ test('meeting, screen share, recording and access control end to end', async ({ 
   await completeFirstSignIn(users.host.email);
   await adminUi.close();
 
-  // --- Members cannot create meetings ------------------------------------------------------
+  // --- Members can create meetings (README: every role may create and enter rooms) ---------
   const memberApi = await apiAs(users.member.email, PASSWORD);
-  expect((await memberApi.post('/api/meetings', { data: { title: 'nope' } })).status()).toBe(403);
+  expect((await memberApi.post('/api/meetings', { data: { title: 'member room' } })).status()).toBe(201);
 
   // --- Host creates a meeting --------------------------------------------------------------
   const host = await login(browser, users.host.email);

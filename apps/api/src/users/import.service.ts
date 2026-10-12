@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { randomUUID } from 'node:crypto';
 import { isEmail } from 'class-validator';
@@ -131,12 +131,12 @@ export class ImportService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Parses and validates an uploaded file, stores the raw rows for 15 minutes, returns the per-row result. */
-  async preview(text: string) {
+  /** Parses and validates an uploaded file, stores the raw rows for 15 minutes for this admin only, returns the per-row result. */
+  async preview(adminId: string, text: string) {
     const rows = this.parseOrReject(text);
     const validated = await this.validate(rows);
     const importId = randomUUID();
-    await this.redis.client.set(this.key(importId), JSON.stringify({ rows }), 'EX', IMPORT_TTL_SECONDS);
+    await this.redis.client.set(this.key(importId), JSON.stringify({ adminId, rows }), 'EX', IMPORT_TTL_SECONDS);
     return {
       importId,
       total: validated.length,
@@ -146,13 +146,52 @@ export class ImportService {
     };
   }
 
-  /** All-or-nothing. Returns the CSV of temporary passwords; it is not stored anywhere on the server. */
+  /**
+   * All-or-nothing. Returns the CSV of temporary passwords; it is not stored anywhere on the server.
+   * The import is claimed atomically (GETDEL), so a double click cannot run it twice, and only the admin who
+   * made the preview can commit it. If anything fails before the accounts exist, the claim is put back with its
+   * remaining lifetime so the admin can fix the file and try again.
+   */
   async commit(adminId: string, importId: string, ip: string): Promise<string> {
-    const stored = await this.redis.client.get(this.key(importId));
+    const key = this.key(importId);
+    const remaining = await this.redis.client.ttl(key);
+    const stored = await this.redis.client.getdel(key);
     if (!stored) throw coded(HttpStatus.GONE, 'IMPORT_EXPIRED', 'This import has expired. Upload the file again.');
-    const { rows } = JSON.parse(stored) as { rows: string[][] };
+    const restore = () => this.redis.client.set(key, stored, 'EX', remaining > 0 ? remaining : IMPORT_TTL_SECONDS);
 
-    // Validate again: the database may have changed since the preview.
+    const { adminId: owner, rows } = JSON.parse(stored) as { adminId?: string; rows: string[][] };
+    if (owner !== adminId) {
+      await restore(); // someone else tried to take it: it stays available to its owner
+      throw new ForbiddenException('This import belongs to another administrator.');
+    }
+
+    let accounts: { id: string; row: NormalizedRow; password: string }[];
+    try {
+      accounts = await this.createAccounts(rows);
+    } catch (error) {
+      await restore();
+      throw error;
+    }
+
+    for (const account of accounts) {
+      await this.audit.log({
+        action: 'user.created',
+        actorId: adminId,
+        targetType: 'user',
+        targetId: account.id,
+        ip,
+        metadata: { role: account.row.role, source: 'csv_import' },
+      });
+    }
+    await this.audit.log({ action: 'users.imported', actorId: adminId, ip, metadata: { count: accounts.length } });
+
+    const lines = [csvLine(['email', 'display_name', 'employee_id', 'temporary_password'])];
+    for (const a of accounts) lines.push(csvLine([a.row.email, a.row.displayName, a.row.employeeId, a.password]));
+    return CSV_BOM + lines.join('\r\n') + '\r\n';
+  }
+
+  /** Validates again (the database may have changed since the preview), then creates every account in one transaction. */
+  private async createAccounts(rows: string[][]) {
     const validated = await this.validate(rows);
     const invalid = validated.filter((r) => r.errors.length > 0);
     if (invalid.length > 0) {
@@ -199,22 +238,7 @@ export class ImportService {
       throw error;
     }
 
-    await this.redis.client.del(this.key(importId));
-    for (const account of accounts) {
-      await this.audit.log({
-        action: 'user.created',
-        actorId: adminId,
-        targetType: 'user',
-        targetId: account.id,
-        ip,
-        metadata: { role: account.row.role, source: 'csv_import' },
-      });
-    }
-    await this.audit.log({ action: 'users.imported', actorId: adminId, ip, metadata: { count: accounts.length } });
-
-    const lines = [csvLine(['email', 'display_name', 'employee_id', 'temporary_password'])];
-    for (const a of accounts) lines.push(csvLine([a.row.email, a.row.displayName, a.row.employeeId, a.password]));
-    return CSV_BOM + lines.join('\r\n') + '\r\n';
+    return accounts;
   }
 
   template(): string {

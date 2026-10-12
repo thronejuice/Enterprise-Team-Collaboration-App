@@ -5,6 +5,34 @@ import { StorageService } from '../recordings/storage.service';
 
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 export const AVATAR_SIZE = 256;
+/** Decoded size cap: a small compressed file can still expand to hundreds of megabytes of pixels. */
+export const MAX_INPUT_PIXELS = 4096 * 4096;
+/** Images decoded at the same time. Decoding is CPU and memory heavy and must not starve meetings. */
+export const MAX_CONCURRENT_DECODES = 2;
+
+/** Runs at most `limit` tasks at once; the rest wait their turn. */
+export class Semaphore {
+  private active = 0;
+  private readonly waiting: (() => void)[] = [];
+
+  constructor(private readonly limit: number) {}
+
+  async run<T>(task: () => Promise<T>): Promise<T> {
+    if (this.active >= this.limit) {
+      // The slot is handed over by release(), so `active` stays at the limit and nobody can jump the queue.
+      await new Promise<void>((resolve) => this.waiting.push(resolve));
+    } else {
+      this.active++;
+    }
+    try {
+      return await task();
+    } finally {
+      const next = this.waiting.shift();
+      if (next) next();
+      else this.active--;
+    }
+  }
+}
 
 /** Detects the real format from magic bytes; the file name and Content-Type are never trusted. */
 export function sniffImageType(buf: Buffer): 'jpeg' | 'png' | 'webp' | null {
@@ -20,6 +48,7 @@ export const avatarKeyFor = (userId: string) => `avatars/${userId}/${randomBytes
 @Injectable()
 export class AvatarService {
   private readonly logger = new Logger(AvatarService.name);
+  private readonly decodes = new Semaphore(MAX_CONCURRENT_DECODES);
 
   constructor(private readonly storage: StorageService) {}
 
@@ -29,11 +58,13 @@ export class AvatarService {
       throw new UnsupportedMediaTypeException('Avatar must be a JPG, PNG or WebP image.');
     }
     try {
-      return await sharp(input, { failOn: 'error' })
-        .rotate() // apply EXIF orientation before the metadata is dropped
-        .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
-        .webp()
-        .toBuffer();
+      return await this.decodes.run(() =>
+        sharp(input, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS, animated: false })
+          .rotate() // apply EXIF orientation before the metadata is dropped
+          .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
+          .webp()
+          .toBuffer(),
+      );
     } catch {
       throw new UnsupportedMediaTypeException('Avatar could not be read as an image.');
     }

@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import type { Prisma, SuspensionReason, UserSuspension } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
@@ -68,7 +68,6 @@ export class SuspensionService {
 
     const immediate = dto.effective === 'now';
     const effectiveAt = effectiveAtFor(dto.effective, now);
-    if (target.role === 'ADMIN') await this.assertNotLastAdmin(userId);
     if (dto.handoverToId && !(await this.isEligibleRecipient(this.prisma, dto.handoverToId, userId))) {
       throw coded(HttpStatus.BAD_REQUEST, 'HANDOVER_INVALID', 'The selected handover user is not active or is being suspended.');
     }
@@ -77,6 +76,8 @@ export class SuspensionService {
     let applied: AppliedEffects | null = null;
     try {
       ({ row, applied } = await this.prisma.$transaction(async (tx) => {
+        // Checked inside the transaction, under the admin lock, so two admins cannot suspend each other at once.
+        if (target.role === 'ADMIN') await assertAdminRemains(tx, userId);
         const created = await tx.userSuspension.create({
           data: {
             userId,
@@ -182,6 +183,7 @@ export class SuspensionService {
       });
       // The reason category stays; free-text notes are personal data.
       await tx.userSuspension.updateMany({ where: { userId }, data: { note: null, liftNote: null } });
+      await scrubUpdatedAudit(tx, userId);
     });
     await this.sessions.destroyAllForUser(userId);
     await this.audit.log({ action: 'user.anonymized', actorId: admin.id, targetType: 'user', targetId: userId, ip });
@@ -201,8 +203,9 @@ export class SuspensionService {
         try {
           await this.applyScheduled(id);
         } catch (error) {
-          // Left SCHEDULED: the next run retries it.
+          // Left SCHEDULED (the transaction rolled back): the next run retries it.
           this.logger.error(`Scheduled suspension ${id} failed: ${(error as Error).message}`);
+          if (isLastAdminError(error)) await this.recordBlocked(id);
         }
       }
     } finally {
@@ -221,6 +224,9 @@ export class SuspensionService {
         });
         if (claimed.count === 0) return null;
         const row = await tx.userSuspension.findUniqueOrThrow({ where: { id } });
+        // The rule is checked again now: roles and other suspensions may have changed since this was scheduled.
+        const target = await tx.user.findUniqueOrThrow({ where: { id: row.userId }, select: { role: true } });
+        if (target.role === 'ADMIN') await assertAdminRemains(tx, row.userId);
         return { row, applied: await this.applyEffects(tx, row) };
       },
       { timeout: 15_000 },
@@ -314,19 +320,64 @@ export class SuspensionService {
     return pending === 0;
   }
 
-  /** Refuses to suspend the last admin who is not already leaving. Counts pending suspensions as leaving. */
-  private async assertNotLastAdmin(userId: string): Promise<void> {
-    const others = await this.prisma.user.count({
-      where: {
-        role: 'ADMIN',
-        isActive: true,
-        anonymizedAt: null,
-        id: { not: userId },
-        suspensions: { none: { status: { in: [...OPEN_STATUSES] } } },
-      },
+  /** Audits that a due suspension was held back, once per suspension (the job retries every minute). */
+  private async recordBlocked(suspensionId: string): Promise<void> {
+    const row = await this.prisma.userSuspension.findUnique({ where: { id: suspensionId } });
+    if (!row) return;
+    const already = await this.prisma.auditLog.findFirst({
+      where: { action: 'user.suspension_blocked', targetId: row.userId, metadata: { path: ['suspensionId'], equals: suspensionId } },
+      select: { id: true },
     });
-    if (others === 0) throw coded(HttpStatus.CONFLICT, 'LAST_ADMIN', 'The last active administrator cannot be suspended.');
+    if (already) return;
+    await this.audit.log({
+      action: 'user.suspension_blocked',
+      actorId: null,
+      targetType: 'user',
+      targetId: row.userId,
+      success: false,
+      metadata: { suspensionId, reason: 'LAST_ADMIN', effectiveAt: row.effectiveAt },
+    });
   }
+}
+
+/**
+ * Versions before this fix stored the new value of each edited field in `metadata.changes` of `user.updated`.
+ * Keep only which fields changed, so names, phone numbers and employee IDs do not outlive the account.
+ */
+export async function scrubUpdatedAudit(tx: Tx, userId: string): Promise<void> {
+  const rows = await tx.auditLog.findMany({ where: { action: 'user.updated', targetId: userId }, select: { id: true, metadata: true } });
+  for (const row of rows) {
+    const meta = row.metadata as Record<string, unknown> | null;
+    if (!meta || typeof meta.changes !== 'object' || meta.changes === null) continue;
+    const fields = [...new Set(Object.keys(meta.changes).map((k) => (k === 'emailFrom' || k === 'emailTo' ? 'email' : k)))];
+    const rest = { ...meta };
+    delete rest.changes;
+    await tx.auditLog.update({ where: { id: row.id }, data: { metadata: { ...rest, fields } as Prisma.InputJsonValue } });
+  }
+}
+
+/**
+ * Every change that can remove an admin (suspend, scheduled suspension, demotion) goes through this.
+ * The advisory lock serialises them, then at least one other usable admin must remain. Pending suspensions count as leaving.
+ */
+export async function assertAdminRemains(tx: Tx, leavingUserId: string): Promise<void> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('admin-invariant'))`;
+  const others = await tx.user.count({
+    where: {
+      role: 'ADMIN',
+      isActive: true,
+      anonymizedAt: null,
+      id: { not: leavingUserId },
+      suspensions: { none: { status: { in: [...OPEN_STATUSES] } } },
+    },
+  });
+  if (others === 0) throw coded(HttpStatus.CONFLICT, 'LAST_ADMIN', 'At least one active administrator must remain.');
+}
+
+function isLastAdminError(error: unknown): boolean {
+  if (!(error instanceof HttpException)) return false;
+  const body = error.getResponse();
+  return typeof body === 'object' && body !== null && (body as { code?: string }).code === 'LAST_ADMIN';
 }
 
 /** Values that replace personal data when an account is anonymized (F8 table). */

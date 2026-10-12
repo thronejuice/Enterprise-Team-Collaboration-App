@@ -61,7 +61,7 @@ export default function ImportUsersPage() {
 
   async function commit() {
     if (!preview) return;
-    if (!window.confirm('Create these accounts now? The temporary passwords are shown only once, in the file that will download.')) return;
+    if (!window.confirm('Create these accounts now? The temporary passwords are shown only once, in the file that will download. If the download fails, the accounts still exist: reset their passwords from the Users page.')) return;
     setBusy(true);
     setError('');
     try {
@@ -98,6 +98,7 @@ export default function ImportUsersPage() {
             <li>Header, in this order: {COLUMNS.join(', ')}</li>
             <li>Role is ADMIN, HOST or MEMBER. Department must match an active department name.</li>
             <li>The file has no password column. Each new user gets a random temporary password and must change it at first sign-in.</li>
+            <li>Only you can import a file you previewed. If the password file does not download, the accounts are already created: reset their passwords from the Users page.</li>
           </ul>
           <a href="/api/admin/users/import/template.csv" download className={buttonClass('secondary')}>
             <Download className="size-4" /> Download template
