@@ -6,11 +6,11 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
 import { Avatar } from '@/components/avatar';
 import { PasswordForm } from '@/components/password-form';
 import { useToast } from '@/components/toast';
-import { Button, buttonClass, Card, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
+import { Button, buttonClass, Card, ErrorText, Input, Label, PageHeader, Pill, Select, Spinner } from '@/components/ui';
 import { api, apiUpload, downloadCsv, errorMessage } from '@/lib/api';
 import { useAuth, useRequireUser } from '@/lib/auth';
 import { formatDateTime, formatRelative } from '@/lib/format';
-import type { Profile, SessionInfo } from '@/lib/types';
+import type { Department, Profile, SessionInfo } from '@/lib/types';
 
 const AVATAR_MAX = 2 * 1024 * 1024;
 
@@ -73,15 +73,21 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
   const toast = useToast();
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [phone, setPhone] = useState(profile.phone ?? '');
+  const [departmentId, setDepartmentId] = useState(profile.department?.id ?? '');
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api<Department[]>('/departments').then(setDepartments).catch(() => undefined);
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError('');
     try {
-      const updated = await api<Profile>('/me/profile', { method: 'PATCH', body: { displayName, phone: phone.trim() || null } });
+      const updated = await api<Profile>('/me/profile', { method: 'PATCH', body: { displayName, phone: phone.trim() || null, departmentId: departmentId || null } });
       onSaved(updated);
       toast('Profile saved', 'success');
     } catch (err) {
@@ -112,6 +118,19 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
           <Label htmlFor="pf-phone">Phone (optional)</Label>
           <Input id="pf-phone" maxLength={20} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
+        <div>
+          <Label htmlFor="pf-dept">Department</Label>
+          <Select id="pf-dept" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+            <option value="">— Not set —</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+            {profile.department && !profile.department.isActive && <option value={profile.department.id}>{profile.department.name} (inactive)</option>}
+          </Select>
+          <p className="mt-1 text-xs text-fg-subtle">Choose the department you work in.</p>
+        </div>
         <div className="sm:col-span-2">
           <ErrorText>{error}</ErrorText>
         </div>
@@ -126,7 +145,6 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
         {managed('First name', profile.firstName)}
         {managed('Last name', profile.lastName)}
         {managed('Job title', profile.jobTitle)}
-        {managed('Department', profile.department?.name ?? null)}
         {managed('Employee ID', profile.employeeId)}
         {managed('Email', profile.email)}
         <p className="text-xs text-fg-subtle sm:col-span-2">Managed by your administrator.</p>

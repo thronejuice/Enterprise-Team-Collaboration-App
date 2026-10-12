@@ -19,7 +19,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Prisma } from '@prisma/client';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import type { Response } from 'express';
 import type {} from 'multer'; // brings Express.Multer.File into scope
 import { AuditService } from '../audit/audit.service';
@@ -45,6 +45,11 @@ class UpdateProfileDto {
   @IsString()
   @MaxLength(20)
   phone?: string | null;
+
+  /** Own department, chosen from the active list. null clears it. */
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string | null;
 }
 
 /** Self-service profile, avatar, People directory and department list (any signed-in user). */
@@ -72,6 +77,13 @@ export class MeController {
       if (dto.phone !== undefined) data.phone = normalizePhone(dto.phone);
     } catch (error) {
       throw new BadRequestException((error as Error).message);
+    }
+    if (dto.departmentId !== undefined) {
+      if (dto.departmentId) {
+        const department = await this.prisma.department.findUnique({ where: { id: dto.departmentId }, select: { isActive: true } });
+        if (!department?.isActive) throw new BadRequestException('Choose an active department.');
+      }
+      data.department = dto.departmentId ? { connect: { id: dto.departmentId } } : { disconnect: true };
     }
     const row = await this.prisma.user.update({ where: { id: user.id }, data, include: userInclude });
     const fields = Object.keys(data);
