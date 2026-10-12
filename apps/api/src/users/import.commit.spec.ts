@@ -85,3 +85,31 @@ describe('CSV import commit (L4)', () => {
     expect(JSON.stringify(audit.log.mock.calls)).not.toContain(password);
   });
 });
+
+describe('CSV import file limits', () => {
+  const rowsCsv = (count: number) =>
+    [header, ...Array.from({ length: count }, (_, i) => `user${i}@example.com,User ${i},MEMBER,EMP-${i},,,,,`)].join('\r\n') + '\r\n';
+  const codeOf = (e: unknown) => (e as HttpException).getResponse() as { code?: string; message?: string };
+
+  it('accepts exactly 500 data rows (the header is not counted)', async () => {
+    const { service } = setup();
+    const preview = await service.preview('admin-1', rowsCsv(500));
+    expect(preview.total).toBe(500);
+    expect(preview.errorCount).toBe(0);
+  });
+
+  it('rejects 501 rows before anything is stored', async () => {
+    const { service, redis } = setup();
+    const error = await service.preview('admin-1', rowsCsv(501)).catch((e) => e);
+    expect(codeOf(error)).toMatchObject({ code: 'IMPORT_INVALID' });
+    expect(codeOf(error).message).toContain('500');
+    expect(redis.store.size).toBe(0);
+  });
+
+  it('rejects a wrong or reordered header', async () => {
+    const { service } = setup();
+    const swapped = ['display_name', 'email', ...IMPORT_HEADER.slice(2)].join(',') + '\r\nA,a@example.com,MEMBER,E1,,,,,\r\n';
+    expect(codeOf(await service.preview('admin-1', swapped).catch((e) => e))).toMatchObject({ code: 'IMPORT_INVALID' });
+    expect(codeOf(await service.preview('admin-1', 'email,password\r\na@example.com,secret\r\n').catch((e) => e))).toMatchObject({ code: 'IMPORT_INVALID' });
+  });
+});

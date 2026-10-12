@@ -8,7 +8,7 @@ import type { AuditItem } from '@/lib/types';
 
 const PREFIXES = ['', 'auth.', 'user.', 'users.', 'profile.', 'department.', 'meeting.', 'recording.'];
 /** Actions that change someone's access or personal data: shown in red. */
-const SENSITIVE = new Set(['user.suspended', 'user.anonymized', 'user.reactivated', 'user.suspension_cancelled', 'users.exported', 'auth.session_revoked']);
+const SENSITIVE = new Set(['user.suspended', 'user.suspension_blocked', 'user.anonymized', 'user.reactivated', 'user.suspension_cancelled', 'users.exported', 'auth.session_revoked']);
 
 export default function AuditPage() {
   const [items, setItems] = useState<AuditItem[]>([]);
