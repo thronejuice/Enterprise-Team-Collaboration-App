@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckStatus, ConnectionCheck, type CheckInfo } from 'livekit-client';
-import { CircleCheck, CircleDashed, CircleX, Loader2, MinusCircle } from 'lucide-react';
+import { CircleCheck, CircleDashed, CircleX, Loader2, MinusCircle, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Button, Card, ErrorText, PageHeader } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api';
@@ -66,7 +66,7 @@ export default function DiagnosticsPage() {
         title="Connection test"
         subtitle="Checks that this device can reach the meeting server over HTTPS, WebSocket and WebRTC on this network."
         actions={
-          <Button onClick={run} loading={running}>
+          <Button onClick={run} loading={running} icon={<RefreshCw className="size-4" />}>
             {Object.keys(results).length ? 'Run again' : 'Run test'}
           </Button>
         }

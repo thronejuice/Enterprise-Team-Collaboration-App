@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Plus, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Plus, Upload, UserPlus, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -137,10 +137,10 @@ function CreateUserModal({ open, onClose, onCreated, departments }: { open: bool
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={busy}>
+          <Button icon={<UserPlus className="size-4" />} type="submit" loading={busy}>
             Create user
           </Button>
         </div>
@@ -380,10 +380,10 @@ function UsersList() {
             {data.total} user{data.total === 1 ? '' : 's'} · page {page} of {pages}
           </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setParams({ page: String(page - 1) })}>
+            <Button icon={<ChevronLeft className="size-4" />} size="sm" variant="secondary" disabled={page <= 1} onClick={() => setParams({ page: String(page - 1) })}>
               Previous
             </Button>
-            <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setParams({ page: String(page + 1) })}>
+            <Button icon={<ChevronRight className="size-4" />} size="sm" variant="secondary" disabled={page >= pages} onClick={() => setParams({ page: String(page + 1) })}>
               Next
             </Button>
           </div>

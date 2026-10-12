@@ -1,4 +1,5 @@
 'use client';
+import { Check } from 'lucide-react';
 
 import { useEffect, useState } from 'react';
 import { APP_VERSION, RELEASE_NOTES } from '@/lib/release-notes';
@@ -29,7 +30,7 @@ export function WhatsNew() {
       open={open}
       onClose={close}
       title={`What's new in ${RELEASE_NOTES.version}`}
-      footer={<Button onClick={close}>Got it</Button>}
+      footer={<Button icon={<Check className="size-4" />} onClick={close}>Got it</Button>}
     >
       <p className="mb-4 text-xs text-fg-subtle">Released {RELEASE_NOTES.date}</p>
       <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">

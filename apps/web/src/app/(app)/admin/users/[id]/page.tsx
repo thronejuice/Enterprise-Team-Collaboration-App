@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarX, Eraser, KeyRound, LogOut, Save, ShieldOff, Trash2, UserCheck, UserX, X } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
@@ -98,7 +98,7 @@ function ProfileSection({ user, isSelf, departments, onSaved }: { user: AdminUse
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="font-semibold">Profile</h2>
         {user.avatarVersion && (
-          <Button variant="ghost" size="sm" onClick={removeAvatar} title="Remove photo">
+          <Button icon={<Trash2 className="size-4" />} variant="ghost" size="sm" onClick={removeAvatar} title="Remove photo">
             <Trash2 className="size-4" /> Remove photo
           </Button>
         )}
@@ -160,7 +160,7 @@ function ProfileSection({ user, isSelf, departments, onSaved }: { user: AdminUse
         <div className="sm:col-span-2">
           <ErrorText>{error}</ErrorText>
           <div className="flex justify-end">
-            <Button type="submit" loading={busy}>
+            <Button icon={<Save className="size-4" />} type="submit" loading={busy}>
               Save profile
             </Button>
           </div>
@@ -269,7 +269,7 @@ function SuspendModal({ open, user, onClose, onDone }: { open: boolean; user: Ad
           {handover ? (
             <div className="flex items-center justify-between rounded border border-line px-3 py-2">
               <span>{handover.displayName}</span>
-              <Button size="sm" variant="ghost" onClick={() => setHandover(null)}>
+              <Button icon={<Eraser className="size-4" />} size="sm" variant="ghost" onClick={() => setHandover(null)}>
                 Clear
               </Button>
             </div>
@@ -296,10 +296,10 @@ function SuspendModal({ open, user, onClose, onDone }: { open: boolean; user: Ad
         </label>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="danger" loading={busy} disabled={!confirmed || (reason === 'OTHER' && !note.trim())}>
+          <Button type="submit" variant="danger" loading={busy} disabled={!confirmed || (reason === 'OTHER' && !note.trim())} icon={<UserX className="size-4" />}>
             {mode === 'now' ? 'Suspend now' : 'Schedule suspension'}
           </Button>
         </div>
@@ -346,10 +346,10 @@ function ReactivateModal({ open, user, onClose, onDone }: { open: boolean; user:
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={busy}>
+          <Button icon={<UserCheck className="size-4" />} type="submit" loading={busy}>
             Reactivate
           </Button>
         </div>
@@ -394,10 +394,10 @@ function AnonymizeModal({ open, user, onClose, onDone }: { open: boolean; user: 
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="danger" loading={busy} disabled={!matches}>
+          <Button icon={<ShieldOff className="size-4" />} type="submit" variant="danger" loading={busy} disabled={!matches}>
             Anonymize permanently
           </Button>
         </div>
@@ -437,10 +437,10 @@ function ResetPasswordModal({ open, user, onClose }: { open: boolean; user: Admi
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={busy}>
+          <Button icon={<KeyRound className="size-4" />} type="submit" loading={busy}>
             Reset password
           </Button>
         </div>
@@ -482,7 +482,7 @@ function SessionsSection({ userId }: { userId: string }) {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-semibold">Active sessions</h2>
         {items && items.length > 0 && (
-          <Button size="sm" variant="secondary" onClick={signOutAll}>
+          <Button icon={<LogOut className="size-4" />} size="sm" variant="secondary" onClick={signOutAll}>
             Sign out all
           </Button>
         )}
@@ -499,7 +499,7 @@ function SessionsSection({ userId }: { userId: string }) {
                   {s.ip ?? 'Unknown IP'} · signed in {s.createdAt ? formatDateTime(s.createdAt) : '—'} · last active {s.lastSeenAt ? formatRelative(s.lastSeenAt) : '—'}
                 </p>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
+              <Button icon={<LogOut className="size-4" />} size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
                 Sign out
               </Button>
             </li>
@@ -545,20 +545,20 @@ function StatusSection({ user, onChanged }: { user: AdminUserDetail; onChanged: 
         </div>
         <div className="flex flex-wrap gap-2">
           {scheduled && (
-            <Button variant="secondary" onClick={cancelScheduled} loading={busy}>
+            <Button icon={<CalendarX className="size-4" />} variant="secondary" onClick={cancelScheduled} loading={busy}>
               Cancel scheduled suspension
             </Button>
           )}
           {canSuspend && (
-            <Button variant="danger" onClick={() => setSuspendOpen(true)}>
+            <Button icon={<UserX className="size-4" />} variant="danger" onClick={() => setSuspendOpen(true)}>
               Suspend…
             </Button>
           )}
           {suspendedNow && (
-            <Button onClick={() => setReactivateOpen(true)}>Reactivate</Button>
+            <Button icon={<UserCheck className="size-4" />} onClick={() => setReactivateOpen(true)}>Reactivate</Button>
           )}
           {suspendedNow && user.currentSuspension?.status === 'ACTIVE' && (
-            <Button variant="danger" onClick={() => setAnonymizeOpen(true)}>
+            <Button icon={<ShieldOff className="size-4" />} variant="danger" onClick={() => setAnonymizeOpen(true)}>
               Anonymize…
             </Button>
           )}
@@ -640,7 +640,7 @@ export default function AdminUserPage() {
         }
         actions={
           !anonymized && (
-            <Button variant="secondary" onClick={() => setResetOpen(true)}>
+            <Button icon={<KeyRound className="size-4" />} variant="secondary" onClick={() => setResetOpen(true)}>
               Reset password
             </Button>
           )

@@ -27,8 +27,8 @@ export function buttonClass(variant: Variant = 'primary', size: keyof typeof siz
 
 export const Button = forwardRef<
   HTMLButtonElement,
-  ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean; size?: 'sm' | 'md' | 'lg' }
->(function Button({ variant = 'primary', loading, size = 'md', className, children, disabled, ...props }, ref) {
+  ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean; size?: 'sm' | 'md' | 'lg'; icon?: ReactNode }
+>(function Button({ variant = 'primary', loading, size = 'md', className, children, disabled, icon, ...props }, ref) {
   return (
     <button
       ref={ref}
@@ -36,7 +36,7 @@ export const Button = forwardRef<
       className={buttonClass(variant, size, className)}
       {...props}
     >
-      {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
+      {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : icon}
       {children}
     </button>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, Copy, DoorOpen, Film, Plus, Video } from 'lucide-react';
+import { ArrowRight, CalendarClock, Copy, DoorOpen, Film, Plus, Video } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
@@ -44,7 +44,7 @@ function JoinCard() {
       <form onSubmit={submit} className="space-y-4">
         <RoomCodeInput value={code} onChange={setCode} disabled={busy} />
         <ErrorText>{error}</ErrorText>
-        <Button type="submit" loading={busy} disabled={code.length !== 4}>
+        <Button icon={<ArrowRight className="size-4" />} type="submit" loading={busy} disabled={code.length !== 4}>
           Continue
         </Button>
       </form>
@@ -95,7 +95,7 @@ function CreateCard({ onCreated }: { onCreated: () => void }) {
           <Link href={`/meetings/${created.id}`} className={buttonClass()}>
             <Video className="size-4" /> Enter meeting
           </Link>
-          <Button variant="ghost" onClick={() => setCreated(null)}>
+          <Button icon={<Plus className="size-4" />} variant="ghost" onClick={() => setCreated(null)}>
             Create another
           </Button>
         </div>
@@ -115,7 +115,7 @@ function CreateCard({ onCreated }: { onCreated: () => void }) {
           <Input id="title" required maxLength={120} placeholder="e.g. Sprint review" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <ErrorText>{error}</ErrorText>
-        <Button type="submit" loading={busy} disabled={!title.trim()}>
+        <Button icon={<Plus className="size-4" />} type="submit" loading={busy} disabled={!title.trim()}>
           Create meeting
         </Button>
       </form>

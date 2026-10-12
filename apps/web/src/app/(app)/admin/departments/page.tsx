@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Power, PowerOff, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Modal } from '@/components/modal';
@@ -47,10 +47,10 @@ function NameModal({ open, department, onClose, onSaved }: { open: boolean; depa
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button icon={<X className="size-4" />} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={busy}>
+          <Button type="submit" loading={busy} icon={department ? <Save className="size-4" /> : <Plus className="size-4" />}>
             {department ? 'Save' : 'Add'}
           </Button>
         </div>
@@ -136,11 +136,11 @@ export default function DepartmentsPage() {
                         <Pencil className="size-4" /> Rename
                       </Button>
                       {d.isActive ? (
-                        <Button variant="ghost" size="sm" onClick={() => setActive(d, false)}>
+                        <Button icon={<PowerOff className="size-4" />} variant="ghost" size="sm" onClick={() => setActive(d, false)}>
                           Deactivate
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="sm" onClick={() => setActive(d, true)}>
+                        <Button icon={<Power className="size-4" />} variant="ghost" size="sm" onClick={() => setActive(d, true)}>
                           Reactivate
                         </Button>
                       )}

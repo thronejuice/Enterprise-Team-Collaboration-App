@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2, Upload } from 'lucide-react';
+import { LogOut, Save, Trash2, Upload } from 'lucide-react';
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import { Avatar } from '@/components/avatar';
 import { PasswordForm } from '@/components/password-form';
@@ -58,7 +58,7 @@ function AvatarSection({ profile, onChanged }: { profile: Profile; onChanged: (v
           <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={upload} disabled={busy} aria-label="Upload photo" />
         </label>
         {profile.avatarVersion && (
-          <Button variant="ghost" onClick={remove} loading={busy}>
+          <Button icon={<Trash2 className="size-4" />} variant="ghost" onClick={remove} loading={busy}>
             <Trash2 className="size-4" /> Remove
           </Button>
         )}
@@ -115,7 +115,7 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
           <ErrorText>{error}</ErrorText>
         </div>
         <div className="sm:col-span-2 flex justify-end">
-          <Button type="submit" loading={busy}>
+          <Button icon={<Save className="size-4" />} type="submit" loading={busy}>
             Save
           </Button>
         </div>
@@ -169,7 +169,7 @@ function SessionsSection() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold">Sessions</h2>
         {items && items.length > 1 && (
-          <Button size="sm" variant="secondary" onClick={signOutOthers}>
+          <Button icon={<LogOut className="size-4" />} size="sm" variant="secondary" onClick={signOutOthers}>
             Sign out all other devices
           </Button>
         )}
@@ -188,7 +188,7 @@ function SessionsSection() {
                 </p>
               </div>
               {!s.current && (
-                <Button size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
+                <Button icon={<LogOut className="size-4" />} size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
                   Sign out
                 </Button>
               )}

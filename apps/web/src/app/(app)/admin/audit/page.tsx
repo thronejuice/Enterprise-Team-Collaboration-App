@@ -1,4 +1,5 @@
 'use client';
+import { Filter, History } from 'lucide-react';
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Card, cx, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
@@ -51,7 +52,7 @@ export default function AuditPage() {
           <Label>Category</Label>
           <div className="flex gap-1">
             {PREFIXES.map((p) => (
-              <Button key={p || 'all'} size="sm" variant={action === p ? 'primary' : 'secondary'} onClick={() => setAction(p)}>
+              <Button key={p || 'all'} size="sm" variant={action === p ? 'primary' : 'secondary'} onClick={() => setAction(p)} icon={<Filter className="size-4" />}>
                 {p ? p.replace('.', '') : 'all'}
               </Button>
             ))}
@@ -102,7 +103,7 @@ export default function AuditPage() {
       </Card>
       {next && !loading && (
         <div className="mt-4 flex justify-center">
-          <Button variant="secondary" onClick={() => void load(next)}>
+          <Button icon={<History className="size-4" />} variant="secondary" onClick={() => void load(next)}>
             Load older events
           </Button>
         </div>
