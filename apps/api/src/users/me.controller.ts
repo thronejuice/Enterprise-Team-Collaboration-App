@@ -13,6 +13,7 @@ import {
   Post,
   Query,
   Res,
+  StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -139,9 +140,9 @@ export class MeController {
     const user = await this.prisma.user.findFirst({ where: { id, isActive: true, anonymizedAt: null }, select: { avatarKey: true } });
     const bytes = user?.avatarKey ? await this.avatars.read(user.avatarKey) : null;
     if (!bytes) throw new NotFoundException('No avatar');
-    res.setHeader('Content-Type', 'image/webp');
     res.setHeader('Cache-Control', 'private, max-age=86400');
-    return bytes;
+    // A raw Buffer would be serialised as JSON; StreamableFile sends the image bytes.
+    return new StreamableFile(bytes, { type: 'image/webp' });
   }
 
   /** Active departments, for dropdowns and the directory filter. */
