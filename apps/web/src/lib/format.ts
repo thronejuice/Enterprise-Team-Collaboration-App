@@ -36,3 +36,19 @@ export function formatRelative(iso: string): string {
   if (hours < 24) return `${hours} h ago`;
   return formatDateTime(iso);
 }
+
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' });
+}
+
+/** "AB" from a display name (used for avatar fallbacks). */
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}

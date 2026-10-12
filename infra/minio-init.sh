@@ -7,6 +7,7 @@ mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >
 mc mb --ignore-existing "local/$S3_BUCKET"
 mc anonymous set none "local/$S3_BUCKET"
 
+# Egress may write recordings only (meetings/*), so it cannot overwrite avatars.
 cat > /tmp/egress-writer.json <<JSON
 {
   "Version": "2012-10-17",
@@ -14,7 +15,7 @@ cat > /tmp/egress-writer.json <<JSON
     {
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"],
-      "Resource": ["arn:aws:s3:::$S3_BUCKET/*"]
+      "Resource": ["arn:aws:s3:::$S3_BUCKET/meetings/*"]
     },
     {
       "Effect": "Allow",
@@ -25,6 +26,7 @@ cat > /tmp/egress-writer.json <<JSON
 }
 JSON
 
+# API reads and deletes recordings, and writes avatars only (v0.1.1 profile photos).
 cat > /tmp/api-reader.json <<JSON
 {
   "Version": "2012-10-17",
@@ -33,6 +35,11 @@ cat > /tmp/api-reader.json <<JSON
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:DeleteObject"],
       "Resource": ["arn:aws:s3:::$S3_BUCKET/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": ["arn:aws:s3:::$S3_BUCKET/avatars/*"]
     },
     {
       "Effect": "Allow",

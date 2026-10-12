@@ -1,10 +1,11 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UserRole } from '@prisma/client';
 import { APP_CONFIG, AppConfig } from '../config';
 import { PrismaService } from '../common/prisma.service';
 import { AppRequest } from '../common/request';
-import { IS_PUBLIC, ROLES } from './auth.decorators';
+import { ALLOW_MUST_CHANGE, IS_PUBLIC, ROLES } from './auth.decorators';
+import { coded } from '../common/errors';
 import { SessionService } from './session.service';
 
 export const SESSION_COOKIE = 'sid';
@@ -22,6 +23,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const targets = [context.getHandler(), context.getClass()];
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true;
+    const allowMustChange = this.reflector.getAllAndOverride<boolean>(ALLOW_MUST_CHANGE, targets) === true;
 
     const req = context.switchToHttp().getRequest<AppRequest>();
 
@@ -39,7 +41,7 @@ export class AuthGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, email: true, displayName: true, role: true, isActive: true },
+      select: { id: true, email: true, displayName: true, role: true, isActive: true, mustChangePassword: true },
     });
     if (!user || !user.isActive) {
       await this.sessions.destroy(token);
@@ -47,6 +49,10 @@ export class AuthGuard implements CanActivate {
     }
     req.user = user;
     req.sessionToken = token;
+
+    if (user.mustChangePassword && !allowMustChange) {
+      throw coded(HttpStatus.FORBIDDEN, 'PASSWORD_CHANGE_REQUIRED', 'You must change your password before continuing.');
+    }
 
     const roles = this.reflector.getAllAndOverride<UserRole[] | undefined>(ROLES, targets);
     if (roles && !roles.includes(user.role)) throw new ForbiddenException();

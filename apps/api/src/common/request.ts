@@ -2,7 +2,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { User } from '@prisma/client';
 
-export type AuthUser = Pick<User, 'id' | 'email' | 'displayName' | 'role' | 'isActive'>;
+export type AuthUser = Pick<User, 'id' | 'email' | 'displayName' | 'role' | 'isActive' | 'mustChangePassword'>;
 
 export interface AppRequest extends Request {
   user?: AuthUser;

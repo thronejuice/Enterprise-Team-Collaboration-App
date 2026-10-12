@@ -1,15 +1,17 @@
 'use client';
 
-import { KeyRound, Plus, UserCheck, UserX } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Download, Plus, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, Suspense, useCallback, useEffect, useState } from 'react';
+import { Avatar } from '@/components/avatar';
 import { Modal } from '@/components/modal';
 import { useToast } from '@/components/toast';
-import { Button, Card, ErrorText, Input, Label, PageHeader, Pill, Select, Spinner } from '@/components/ui';
-import { api, errorMessage } from '@/lib/api';
+import { Button, buttonClass, Card, EmptyState, ErrorText, Input, Label, PageHeader, Pill, Select, Spinner } from '@/components/ui';
+import { api, downloadCsv, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { formatDateTime } from '@/lib/format';
-import type { AdminUser, UserRole } from '@/lib/types';
+import { formatDate, formatDateTime } from '@/lib/format';
+import type { AccountStatus, AdminUserRow, Department, Paged, UserRole } from '@/lib/types';
 
 const ROLES: { value: UserRole; label: string; hint: string }[] = [
   { value: 'MEMBER', label: 'Member', hint: 'Joins meetings with a room code' },
@@ -17,20 +19,53 @@ const ROLES: { value: UserRole; label: string; hint: string }[] = [
   { value: 'ADMIN', label: 'Admin', hint: 'Everything, plus user management and audit log' },
 ];
 
-function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+const STATUS_LABEL: Record<AccountStatus, string> = { ACTIVE: 'Active', LEAVING: 'Leaving', SUSPENDED: 'Suspended', ANONYMIZED: 'Anonymized' };
+const SORTS = [
+  { value: 'createdAt', label: 'Created (oldest first)' },
+  { value: '-createdAt', label: 'Created (newest first)' },
+  { value: 'name', label: 'Name (A–Z)' },
+  { value: '-lastLogin', label: 'Last login (newest first)' },
+  { value: 'lastLogin', label: 'Last login (oldest first)' },
+];
+const PAGE_SIZE = 25;
+
+function StatusPill({ status, effectiveAt }: { status: AccountStatus; effectiveAt: string | null }) {
+  if (status === 'ACTIVE') return <Pill tone="success">Active</Pill>;
+  if (status === 'LEAVING') return <Pill tone="warning">Leaving {effectiveAt ? `on ${formatDate(effectiveAt)}` : ''}</Pill>;
+  if (status === 'SUSPENDED') return <Pill tone="danger">Suspended</Pill>;
+  return <Pill>{STATUS_LABEL[status]}</Pill>;
+}
+
+/** Shared form fields for creating a user. */
+function CreateUserModal({ open, onClose, onCreated, departments }: { open: boolean; onClose: () => void; onCreated: () => void; departments: Department[] }) {
   const toast = useToast();
-  const [form, setForm] = useState({ email: '', displayName: '', role: 'MEMBER' as UserRole, password: '' });
+  const empty = { email: '', displayName: '', role: 'MEMBER' as UserRole, password: '', employeeId: '', firstName: '', lastName: '', jobTitle: '', departmentId: '', phone: '' };
+  const [form, setForm] = useState(empty);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const set = (key: keyof typeof empty) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError('');
     try {
-      await api('/admin/users', { body: form });
-      toast(`Created ${form.email}`, 'success');
-      setForm({ email: '', displayName: '', role: 'MEMBER', password: '' });
+      await api('/admin/users', {
+        body: {
+          email: form.email,
+          displayName: form.displayName,
+          role: form.role,
+          password: form.password,
+          employeeId: form.employeeId,
+          firstName: form.firstName || null,
+          lastName: form.lastName || null,
+          jobTitle: form.jobTitle || null,
+          departmentId: form.departmentId || null,
+          phone: form.phone || null,
+        },
+      });
+      toast(`Created ${form.email}. They must change the password at first sign-in.`, 'success');
+      setForm(empty);
       onCreated();
       onClose();
     } catch (err) {
@@ -43,17 +78,52 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
   return (
     <Modal open={open} onClose={onClose} title="Create user">
       <form onSubmit={submit} className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="u-first">First name</Label>
+            <Input id="u-first" maxLength={100} value={form.firstName} onChange={set('firstName')} />
+          </div>
+          <div>
+            <Label htmlFor="u-last">Last name</Label>
+            <Input id="u-last" maxLength={100} value={form.lastName} onChange={set('lastName')} />
+          </div>
+        </div>
         <div>
           <Label htmlFor="u-name">Display name</Label>
-          <Input id="u-name" required maxLength={80} value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
+          <Input id="u-name" required maxLength={80} value={form.displayName} onChange={set('displayName')} />
         </div>
         <div>
           <Label htmlFor="u-email">Email</Label>
-          <Input id="u-email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input id="u-email" type="email" required value={form.email} onChange={set('email')} />
+        </div>
+        <div>
+          <Label htmlFor="u-emp">Employee ID</Label>
+          <Input id="u-emp" required maxLength={32} pattern="[A-Za-z0-9_\-]+" value={form.employeeId} onChange={set('employeeId')} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="u-title">Job title</Label>
+            <Input id="u-title" maxLength={100} value={form.jobTitle} onChange={set('jobTitle')} />
+          </div>
+          <div>
+            <Label htmlFor="u-dept">Department</Label>
+            <Select id="u-dept" value={form.departmentId} onChange={set('departmentId')}>
+              <option value="">— None —</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="u-phone">Phone (optional)</Label>
+          <Input id="u-phone" maxLength={20} value={form.phone} onChange={set('phone')} />
         </div>
         <div>
           <Label htmlFor="u-role">Role</Label>
-          <Select id="u-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
+          <Select id="u-role" value={form.role} onChange={set('role')}>
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>
                 {r.label} — {r.hint}
@@ -63,7 +133,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
         </div>
         <div>
           <Label htmlFor="u-pass">Initial password (min. 10 characters)</Label>
-          <Input id="u-pass" type="text" required minLength={10} autoComplete="off" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <Input id="u-pass" type="text" required minLength={10} autoComplete="off" value={form.password} onChange={set('password')} />
         </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex justify-end gap-2 pt-2">
@@ -79,81 +149,88 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
   );
 }
 
-function ResetPasswordModal({ user, onClose }: { user: AdminUser | null; onClose: () => void }) {
-  const toast = useToast();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!user) return;
-    setBusy(true);
-    setError('');
-    try {
-      await api(`/admin/users/${user.id}/reset-password`, { body: { password } });
-      toast(`Password reset for ${user.email}. Their sessions were signed out.`, 'success');
-      setPassword('');
-      onClose();
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Modal open={!!user} onClose={onClose} title={`Reset password — ${user?.displayName ?? ''}`}>
-      <form onSubmit={submit} className="space-y-4">
-        <div>
-          <Label htmlFor="r-pass">New password (min. 10 characters)</Label>
-          <Input id="r-pass" type="text" required minLength={10} autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        <ErrorText>{error}</ErrorText>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={busy}>
-            Reset password
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-export default function UsersPage() {
+function UsersList() {
   const { user: me } = useAuth();
   const toast = useToast();
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
   const isAdmin = me?.role === 'ADMIN';
-  const [users, setUsers] = useState<AdminUser[] | null>(null);
+
+  // Filters live in the query string so a refresh or a shared link shows the same list.
+  const q = params.get('q') ?? '';
+  const role = params.get('role') ?? '';
+  const status = params.get('status') ?? '';
+  const departmentId = params.get('departmentId') ?? '';
+  const sort = params.get('sort') ?? 'createdAt';
+  const page = Math.max(Number(params.get('page') ?? '1') || 1, 1);
+
+  const [search, setSearch] = useState(q);
+  const [data, setData] = useState<Paged<AdminUserRow> | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
-  const [resetting, setResetting] = useState<AdminUser | null>(null);
+
+  const setParams = useCallback(
+    (changes: Record<string, string | null>) => {
+      const next = new URLSearchParams(params.toString());
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      }
+      if (!('page' in changes)) next.delete('page');
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
+
+  // Debounce the search box into the URL.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (search !== q) setParams({ q: search.trim() || null });
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the typed text should trigger this
+  }, [search]);
+
+  const query = new URLSearchParams();
+  if (q) query.set('q', q);
+  if (role) query.set('role', role);
+  if (status) query.set('status', status);
+  if (departmentId) query.set('departmentId', departmentId);
+  query.set('sort', sort);
+  query.set('page', String(page));
 
   const load = useCallback(() => {
-    api<AdminUser[]>('/admin/users')
-      .then(setUsers)
+    setError('');
+    api<Paged<AdminUserRow>>(`/admin/users?${query.toString()}`)
+      .then(setData)
       .catch((e) => setError(errorMessage(e)));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.toString()]);
+
   useEffect(() => {
     if (me && !isAdmin) router.replace('/');
     else if (isAdmin) load();
   }, [me, isAdmin, load, router]);
 
-  async function update(u: AdminUser, changes: Partial<Pick<AdminUser, 'role' | 'isActive'>>) {
+  useEffect(() => {
+    if (isAdmin) api<Department[]>('/admin/departments').then(setDepartments).catch(() => undefined);
+  }, [isAdmin]);
+
+  if (!isAdmin) return null;
+
+  const pages = data ? Math.max(Math.ceil(data.total / PAGE_SIZE), 1) : 1;
+
+  async function exportCsv() {
     try {
-      const updated = await api<AdminUser>(`/admin/users/${u.id}`, { method: 'PATCH', body: changes });
-      setUsers((list) => list?.map((x) => (x.id === u.id ? updated : x)) ?? null);
-      if (changes.isActive === false) toast(`${u.displayName} was disabled and disconnected.`, 'success');
+      await downloadCsv(`/admin/users/export.csv?${query.toString().replace(/&?page=\d+/, '')}`);
+      toast('Export downloaded. The export is recorded in the audit log.', 'success');
     } catch (e) {
       toast(errorMessage(e), 'error');
     }
   }
-
-  if (!isAdmin) return null;
 
   return (
     <>
@@ -161,73 +238,160 @@ export default function UsersPage() {
         title="Users"
         subtitle="Accounts are created by administrators; there is no self sign-up."
         actions={
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="size-4" /> Create user
-          </Button>
+          <>
+            <Link href="/admin/users/import" className={buttonClass('secondary')}>
+              <Upload className="size-4" /> Import CSV
+            </Link>
+            <Button variant="secondary" onClick={exportCsv}>
+              <Download className="size-4" /> Export CSV
+            </Button>
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" /> Create user
+            </Button>
+          </>
         }
       />
+
+      <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
+        <div>
+          <Label htmlFor="f-q">Search</Label>
+          <Input id="f-q" placeholder="Name, email or employee ID" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="f-role">Role</Label>
+          <Select id="f-role" value={role} onChange={(e) => setParams({ role: e.target.value || null })}>
+            <option value="">All roles</option>
+            {ROLES.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="f-dept">Department</Label>
+          <Select id="f-dept" value={departmentId} onChange={(e) => setParams({ departmentId: e.target.value || null })}>
+            <option value="">All departments</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+                {!d.isActive ? ' (inactive)' : ''}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="f-status">Status</Label>
+          <Select id="f-status" value={status} onChange={(e) => setParams({ status: e.target.value || null })}>
+            <option value="">All statuses</option>
+            {(Object.keys(STATUS_LABEL) as AccountStatus[]).map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="f-sort">Sort by</Label>
+          <Select id="f-sort" value={sort} onChange={(e) => setParams({ sort: e.target.value })}>
+            {SORTS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
       <Card className="overflow-hidden">
-        {error && <div className="p-5"><ErrorText>{error}</ErrorText></div>}
-        {!users && !error && <div className="p-5"><Spinner /></div>}
-        {users && (
-          <table className="w-full text-left">
-            <thead className="border-b border-line/60 text-xs tracking-[0.015em] text-fg-subtle uppercase">
-              <tr>
-                <th className="px-5 py-3 font-medium">User</th>
-                <th className="px-5 py-3 font-medium">Role</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Created</th>
-                <th className="px-5 py-3 font-medium sr-only">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line/60">
-              {users.map((u) => {
-                const self = u.id === me?.id;
-                return (
-                  <tr key={u.id} className={u.isActive ? '' : 'opacity-60'}>
+        {error && (
+          <div className="p-5">
+            <ErrorText>{error}</ErrorText>
+          </div>
+        )}
+        {!data && !error && (
+          <div className="p-5">
+            <Spinner />
+          </div>
+        )}
+        {data && data.total === 0 && <EmptyState icon={<Upload className="size-8" />} title="No users match these filters" />}
+        {data && data.total > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left">
+              <thead className="border-b border-line/60 text-xs tracking-[0.015em] text-fg-subtle uppercase">
+                <tr>
+                  <th className="px-5 py-3 font-medium">User</th>
+                  <th className="px-5 py-3 font-medium">Employee ID</th>
+                  <th className="px-5 py-3 font-medium">Department</th>
+                  <th className="px-5 py-3 font-medium">Role</th>
+                  <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-5 py-3 font-medium">Last login</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line/60">
+                {data.items.map((u) => (
+                  <tr key={u.id} className="cursor-pointer hover:bg-surface-3/40" onClick={() => router.push(`/admin/users/${u.id}`)}>
                     <td className="px-5 py-3">
-                      <p className="font-medium">
-                        {u.displayName} {self && <span className="text-fg-subtle">(you)</span>}
-                      </p>
-                      <p className="text-xs text-fg-subtle">{u.email}</p>
-                    </td>
-                    <td className="px-5 py-3">
-                      <Select value={u.role} disabled={self} onChange={(e) => update(u, { role: e.target.value as UserRole })} className="h-8 w-28" aria-label={`Role for ${u.displayName}`}>
-                        {ROLES.map((r) => (
-                          <option key={r.value} value={r.value}>
-                            {r.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </td>
-                    <td className="px-5 py-3">{u.isActive ? <Pill tone="success">Active</Pill> : <Pill>Disabled</Pill>}</td>
-                    <td className="px-5 py-3 text-[13px] text-fg-muted">{formatDateTime(u.createdAt)}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setResetting(u)} title="Reset password">
-                          <KeyRound className="size-4" />
-                        </Button>
-                        {!self &&
-                          (u.isActive ? (
-                            <Button variant="ghost" size="sm" onClick={() => update(u, { isActive: false })} title="Disable user">
-                              <UserX className="size-4" /> Disable
-                            </Button>
-                          ) : (
-                            <Button variant="ghost" size="sm" onClick={() => update(u, { isActive: true })} title="Enable user">
-                              <UserCheck className="size-4" /> Enable
-                            </Button>
-                          ))}
+                      <div className="flex items-center gap-3">
+                        <Avatar userId={u.id} name={u.displayName} avatarVersion={u.avatarVersion} size="sm" />
+                        <div className="min-w-0">
+                          <Link href={`/admin/users/${u.id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {u.displayName}
+                            {u.id === me?.id && <span className="text-fg-subtle"> (you)</span>}
+                          </Link>
+                          <p className="truncate text-xs text-fg-subtle">{u.email}</p>
+                        </div>
                       </div>
                     </td>
+                    <td className="px-5 py-3 font-mono text-[13px]">{u.employeeId ?? <span className="text-fg-subtle">—</span>}</td>
+                    <td className="px-5 py-3 text-[13px]">
+                      {u.department ? (
+                        <>
+                          {u.department.name}
+                          {!u.department.isActive && <span className="text-fg-subtle"> (inactive)</span>}
+                        </>
+                      ) : (
+                        <span className="text-fg-subtle">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-[13px]">{u.role}</td>
+                    <td className="px-5 py-3">
+                      <StatusPill status={u.status} effectiveAt={u.effectiveAt} />
+                    </td>
+                    <td className="px-5 py-3 text-[13px] text-fg-muted">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : 'Never'}</td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
-      <CreateUserModal open={creating} onClose={() => setCreating(false)} onCreated={load} />
-      <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />
+
+      {data && data.total > 0 && (
+        <div className="mt-4 flex items-center justify-between text-[13px] text-fg-subtle">
+          <span>
+            {data.total} user{data.total === 1 ? '' : 's'} · page {page} of {pages}
+          </span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setParams({ page: String(page - 1) })}>
+              Previous
+            </Button>
+            <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setParams({ page: String(page + 1) })}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <CreateUserModal open={creating} onClose={() => setCreating(false)} onCreated={load} departments={departments.filter((d) => d.isActive)} />
     </>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <UsersList />
+    </Suspense>
   );
 }

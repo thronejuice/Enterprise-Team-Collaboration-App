@@ -1,35 +1,37 @@
 'use client';
 
-import { Activity, Film, Home, LogOut, PanelLeftClose, PanelLeftOpen, ScrollText, Users } from 'lucide-react';
+import { Activity, Building2, Contact, Film, Home, LogOut, PanelLeftClose, PanelLeftOpen, ScrollText, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { useAuth, useRequireUser } from '@/lib/auth';
+import { initials } from '@/lib/format';
+import { Avatar } from './avatar';
 import { Logo } from './logo';
 import { cx, Spinner } from './ui';
 
 const nav = [
   { href: '/', label: 'Home', icon: Home, admin: false },
   { href: '/recordings', label: 'Recordings', icon: Film, admin: false },
+  { href: '/people', label: 'People', icon: Contact, admin: false },
   { href: '/diagnostics', label: 'Connection test', icon: Activity, admin: false },
   { href: '/admin/users', label: 'Users', icon: Users, admin: true },
+  { href: '/admin/departments', label: 'Departments', icon: Building2, admin: true },
   { href: '/admin/audit', label: 'Audit log', icon: ScrollText, admin: true },
 ];
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const user = useRequireUser();
   const { logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(true);
+
+  // Accounts with a forced password change see only the change-password page until it is done.
+  useEffect(() => {
+    if (user?.mustChangePassword) router.replace('/change-password');
+  }, [user, router]);
 
   useEffect(() => {
     try {
@@ -97,13 +99,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         ))}
         <div className={cx('mt-auto flex gap-2', open ? 'items-center justify-between' : 'flex-col items-center')}>
-          <div className="flex min-w-0 items-center gap-2" title={`${user.displayName} · ${user.role}`}>
+          <Link
+            href="/profile"
+            title={`${user.displayName} · ${user.role}: My profile`}
+            aria-label="My profile"
+            aria-current={pathname === '/profile' ? 'page' : undefined}
+            className="flex min-w-0 items-center gap-2 rounded-md p-1 hover:bg-surface"
+          >
             <div className="relative shrink-0">
-              <div className="grid size-9 place-items-center rounded-full bg-surface-3 text-xs font-semibold">{initials(user.displayName)}</div>
+              <Avatar userId={user.id} name={user.displayName} avatarVersion={user.avatarVersion} />
               <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-success ring-2 ring-canvas" />
             </div>
             {open && <span className="truncate text-sm">{user.displayName}</span>}
-          </div>
+          </Link>
           <button onClick={logout} title="Sign out" aria-label="Sign out" className="grid size-11 shrink-0 place-items-center rounded-md text-fg-subtle hover:bg-surface hover:text-fg">
             <LogOut className="size-5" />
           </button>

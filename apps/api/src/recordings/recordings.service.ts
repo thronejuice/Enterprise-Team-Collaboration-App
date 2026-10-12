@@ -285,7 +285,7 @@ export class RecordingsService {
           : {
               meeting: {
                 OR: [
-                  { createdById: user.id },
+                  { hostId: user.id },
                   { participants: { some: { userId: user.id, revokedAt: null, firstJoinedAt: { not: null } } } },
                 ],
               },

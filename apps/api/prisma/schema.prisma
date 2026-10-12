@@ -14,6 +14,21 @@ enum UserRole {
   MEMBER
 }
 
+enum SuspensionReason {
+  RESIGNED
+  TERMINATED
+  LONG_LEAVE
+  SECURITY
+  OTHER
+}
+
+enum SuspensionStatus {
+  SCHEDULED // ตั้งล่วงหน้า ยังไม่มีผล
+  ACTIVE    // มีผลแล้ว
+  CANCELLED // ยกเลิกก่อนมีผล
+  LIFTED    // เปิดบัญชีคืนแล้ว
+}
+
 enum MeetingStatus {
   ACTIVE
   ENDED
@@ -29,6 +44,18 @@ enum RecordingStatus {
   FAILED
 }
 
+model Department {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique // + unique index บน lower(name) ใน SQL
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("departments")
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
@@ -39,10 +66,26 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  firstName          String?   @map("first_name")
+  lastName           String?   @map("last_name")
+  employeeId         String?   @unique @map("employee_id")
+  phone              String?
+  jobTitle           String?   @map("job_title")
+  departmentId       String?   @map("department_id") @db.Uuid
+  avatarKey          String?   @map("avatar_key")
+  avatarUpdatedAt    DateTime? @map("avatar_updated_at")
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  lastLoginAt        DateTime? @map("last_login_at")
+  anonymizedAt       DateTime? @map("anonymized_at")
+
   meetingsCreated Meeting[]            @relation("MeetingCreator")
+  meetingsHosted  Meeting[]            @relation("MeetingHost")
   participations  MeetingParticipant[] @relation("ParticipantUser")
   recordings      Recording[]          @relation("RecordingRequester")
+  department      Department?          @relation(fields: [departmentId], references: [id])
+  suspensions     UserSuspension[]     @relation("SuspendedUser")
 
+  @@index([departmentId])
   @@map("users")
 }
 
@@ -51,16 +94,21 @@ model Meeting {
   id          String        @id @default(uuid()) @map("meeting_id") @db.Uuid
   roomCode    String        @map("room_code") @db.Char(4)
   title       String
+  /// Who created the room (history only; host rights come from hostId).
   createdById String        @map("created_by") @db.Uuid
+  /// Current controller of the room. Starts equal to createdById and changes on offboarding handover.
+  hostId      String        @map("host_id") @db.Uuid
   status      MeetingStatus @default(ACTIVE)
   createdAt   DateTime      @default(now()) @map("created_at")
   endedAt     DateTime?     @map("ended_at")
 
   createdBy    User                 @relation("MeetingCreator", fields: [createdById], references: [id])
+  host         User                 @relation("MeetingHost", fields: [hostId], references: [id])
   participants MeetingParticipant[]
   recordings   Recording[]
 
   @@index([roomCode, status])
+  @@index([hostId])
   @@map("meetings")
 }
 
@@ -121,4 +169,28 @@ model AuditLog {
   @@index([createdAt])
   @@index([action])
   @@map("audit_logs")
+}
+
+model UserSuspension {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @map("user_id") @db.Uuid
+  reason        SuspensionReason
+  note          String?
+  status        SuspensionStatus @default(SCHEDULED)
+  effectiveAt   DateTime         @map("effective_at")
+  handoverToId  String?          @map("handover_to") @db.Uuid
+  createdById   String           @map("created_by") @db.Uuid
+  createdAt     DateTime         @default(now()) @map("created_at")
+  appliedAt     DateTime?        @map("applied_at")
+  cancelledAt   DateTime?        @map("cancelled_at")
+  cancelledById String?          @map("cancelled_by") @db.Uuid
+  liftedAt      DateTime?        @map("lifted_at")
+  liftedById    String?          @map("lifted_by") @db.Uuid
+  liftNote      String?          @map("lift_note")
+
+  user User @relation("SuspendedUser", fields: [userId], references: [id])
+
+  @@index([status, effectiveAt])
+  @@index([userId])
+  @@map("user_suspensions")
 }

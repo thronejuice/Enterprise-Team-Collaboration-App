@@ -14,6 +14,11 @@ import { MeetingsService } from './meetings/meetings.service';
 import { RecordingsController } from './recordings/recordings.controller';
 import { RecordingsService } from './recordings/recordings.service';
 import { UsersController } from './users/users.controller';
+import { MeController } from './users/me.controller';
+import { DepartmentsController } from './users/departments.controller';
+import { AvatarService } from './users/avatar.service';
+import { ImportService } from './users/import.service';
+import { SuspensionService } from './users/suspension.service';
 
 @Module({
   imports: [GlobalModule, ScheduleModule.forRoot()],
@@ -21,12 +26,22 @@ import { UsersController } from './users/users.controller';
     HealthController,
     AuthController,
     UsersController,
+    MeController,
+    DepartmentsController,
     AuditController,
     MeetingsController,
     RecordingsController,
     WebhookController,
     DiagnosticsController,
   ],
-  providers: [SessionService, MeetingsService, RecordingsService, { provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [
+    SessionService,
+    MeetingsService,
+    RecordingsService,
+    AvatarService,
+    ImportService,
+    SuspensionService,
+    { provide: APP_GUARD, useClass: AuthGuard },
+  ],
 })
 export class AppModule {}

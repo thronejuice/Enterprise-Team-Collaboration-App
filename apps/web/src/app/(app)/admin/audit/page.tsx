@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Card, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
+import { Button, Card, cx, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import type { AuditItem } from '@/lib/types';
 
-const PREFIXES = ['', 'auth.', 'user.', 'meeting.', 'recording.'];
+const PREFIXES = ['', 'auth.', 'user.', 'users.', 'profile.', 'department.', 'meeting.', 'recording.'];
+/** Actions that change someone's access or personal data: shown in red. */
+const SENSITIVE = new Set(['user.suspended', 'user.anonymized', 'user.reactivated', 'user.suspension_cancelled', 'users.exported', 'auth.session_revoked']);
 
 export default function AuditPage() {
   const [items, setItems] = useState<AuditItem[]>([]);
@@ -82,7 +84,8 @@ export default function AuditPage() {
               <tr key={i.id} className="align-top">
                 <td className="tnum px-4 py-2.5 whitespace-nowrap text-fg-muted">{formatDateTime(i.createdAt)}</td>
                 <td className="px-4 py-2.5">
-                  <span className="font-mono text-xs">{i.action}</span> {!i.success && <Pill tone="danger">fail</Pill>}
+                  <span className={cx('font-mono text-xs', SENSITIVE.has(i.action) && 'text-danger')}>{i.action}</span>{' '}
+                  {!i.success && <Pill tone="danger">fail</Pill>}
                 </td>
                 <td className="px-4 py-2.5">{i.actor ? (i.actor.displayName ?? i.actor.id.slice(0, 8)) : <span className="text-fg-subtle">system</span>}</td>
                 <td className="px-4 py-2.5 text-fg-muted">{i.targetType ? `${i.targetType} ${i.targetId?.slice(0, 8)}` : '—'}</td>

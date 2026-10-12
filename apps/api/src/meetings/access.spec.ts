@@ -1,6 +1,6 @@
 import { canAccessMeeting, canManageMeeting, canViewRecordings } from './access';
 
-const meeting = { createdById: 'host-1' };
+const meeting = { hostId: 'host-1' };
 const admin = { id: 'admin-1', role: 'ADMIN' as const };
 const host = { id: 'host-1', role: 'HOST' as const };
 const otherHost = { id: 'host-2', role: 'HOST' as const };
@@ -10,7 +10,7 @@ const admittedOnly = { firstJoinedAt: null, revokedAt: null };
 const revoked = { firstJoinedAt: new Date(), revokedAt: new Date() };
 
 describe('meeting access policy', () => {
-  it('only the creator or an admin manages a meeting', () => {
+  it('only the current host or an admin manages a meeting', () => {
     expect(canManageMeeting(host, meeting)).toBe(true);
     expect(canManageMeeting(admin, meeting)).toBe(true);
     expect(canManageMeeting(otherHost, meeting)).toBe(false);

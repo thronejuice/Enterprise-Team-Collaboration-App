@@ -6,11 +6,13 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!;
 const BASE = `https://${process.env.DEMO_HOSTNAME ?? 'comms-demo.home.arpa'}`;
 const RUN = Date.now().toString(36);
 const PASSWORD = 'Demo-password-123';
+/** Accounts are created with a temporary password and must change it at first sign-in (v0.1.1). */
+const TEMP_PASSWORD = 'Temp-password-123';
 
 const users = {
-  host: { email: `host-${RUN}@demo.test`, displayName: 'Hana Host', role: 'HOST' },
-  member: { email: `member-${RUN}@demo.test`, displayName: 'Mika Member', role: 'MEMBER' },
-  outsider: { email: `outsider-${RUN}@demo.test`, displayName: 'Otto Outsider', role: 'MEMBER' },
+  host: { email: `host-${RUN}@demo.test`, displayName: 'Hana Host', role: 'HOST', employeeId: `E-${RUN}-H` },
+  member: { email: `member-${RUN}@demo.test`, displayName: 'Mika Member', role: 'MEMBER', employeeId: `E-${RUN}-M` },
+  outsider: { email: `outsider-${RUN}@demo.test`, displayName: 'Otto Outsider', role: 'MEMBER', employeeId: `E-${RUN}-O` },
 } as const;
 
 async function apiAs(email: string, password: string): Promise<APIRequestContext> {
@@ -18,6 +20,14 @@ async function apiAs(email: string, password: string): Promise<APIRequestContext
   const res = await ctx.post('/api/auth/login', { data: { email, password } });
   expect(res.status(), `login ${email}`).toBe(200);
   return ctx;
+}
+
+/** The one forced password change a new account makes before it can use the app. */
+async function completeFirstSignIn(email: string) {
+  const ctx = await apiAs(email, TEMP_PASSWORD);
+  const res = await ctx.post('/api/auth/password', { data: { currentPassword: TEMP_PASSWORD, newPassword: PASSWORD } });
+  expect(res.status(), `first password change ${email}`).toBe(204);
+  await ctx.dispose();
 }
 
 async function login(browser: Browser, email: string): Promise<{ ctx: BrowserContext; page: Page }> {
@@ -49,8 +59,9 @@ test('meeting, screen share, recording and access control end to end', async ({ 
   // --- Admin creates accounts (one through the UI) ---------------------------------------
   const admin = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
   for (const key of ['member', 'outsider'] as const) {
-    const res = await admin.post('/api/admin/users', { data: { ...users[key], password: PASSWORD } });
+    const res = await admin.post('/api/admin/users', { data: { ...users[key], password: TEMP_PASSWORD } });
     expect(res.status()).toBe(201);
+    await completeFirstSignIn(users[key].email);
   }
   const adminUi = await browser.newContext();
   const adminPage = await adminUi.newPage();
@@ -65,9 +76,11 @@ test('meeting, screen share, recording and access control end to end', async ({ 
   await dialog.getByLabel('Display name').fill(users.host.displayName);
   await dialog.getByLabel('Email').fill(users.host.email);
   await dialog.getByLabel('Role').selectOption('HOST');
-  await dialog.getByLabel(/Initial password/).fill(PASSWORD);
+  await dialog.getByLabel('Employee ID').fill(users.host.employeeId);
+  await dialog.getByLabel(/Initial password/).fill(TEMP_PASSWORD);
   await dialog.getByRole('button', { name: 'Create user' }).click();
   await expect(adminPage.getByText(users.host.email, { exact: true })).toBeVisible();
+  await completeFirstSignIn(users.host.email);
   await adminUi.close();
 
   // --- Members cannot create meetings ------------------------------------------------------

@@ -42,6 +42,7 @@ export class MeetingsService {
               roomCode,
               title: title.trim(),
               createdById: user.id,
+              hostId: user.id,
               participants: { create: { userId: user.id } },
             },
           }),
@@ -111,18 +112,18 @@ export class MeetingsService {
   async listMine(user: AuthUser) {
     const meetings = await this.prisma.meeting.findMany({
       where: {
-        OR: [{ createdById: user.id }, { participants: { some: { userId: user.id, revokedAt: null } } }],
+        OR: [{ hostId: user.id }, { participants: { some: { userId: user.id, revokedAt: null } } }],
       },
-      include: { createdBy: { select: { displayName: true } } },
+      include: { host: { select: { displayName: true } } },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
-    return meetings.map((m) => this.toDto(m, user, { isHost: canManageMeeting(user, m), hostName: m.createdBy.displayName }));
+    return meetings.map((m) => this.toDto(m, user, { isHost: canManageMeeting(user, m), hostName: m.host.displayName }));
   }
 
   async get(user: AuthUser, meetingId: string) {
     const { meeting } = await this.loadAccessible(user, meetingId);
-    const host = await this.prisma.user.findUnique({ where: { id: meeting.createdById }, select: { displayName: true } });
+    const host = await this.prisma.user.findUnique({ where: { id: meeting.hostId }, select: { displayName: true } });
     const activeRecording = await this.prisma.recording.findFirst({
       where: { meetingId, status: { in: ['REQUESTED', 'STARTING', 'RECORDING', 'STOPPING', 'FINALIZING'] } },
       select: { id: true, status: true, startedAt: true },
@@ -148,11 +149,13 @@ export class MeetingsService {
 
     await this.livekit.ensureRoom(meeting.id, this.livekitCapacity());
     const isHost = canManageMeeting(user, meeting);
+    // avatarVersion lets tiles build the avatar URL without an extra lookup (identity is already the userId).
+    const me = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { avatarUpdatedAt: true } });
     const token = await this.livekit.issueToken({
       room: meeting.id,
       identity: user.id,
       name: user.displayName,
-      metadata: { role: isHost ? 'host' : 'participant' },
+      metadata: { role: isHost ? 'host' : 'participant', avatarVersion: me.avatarUpdatedAt?.getTime() ?? null },
     });
     await this.audit.log({ action: 'meeting.token_issued', actorId: user.id, targetType: 'meeting', targetId: meeting.id, ip });
     return { token, url: this.livekit.publicUrl, isHost };
@@ -174,7 +177,7 @@ export class MeetingsService {
   async removeParticipant(user: AuthUser, meetingId: string, targetUserId: string, ip: string) {
     const meeting = await this.loadManageable(user, meetingId);
     if (targetUserId === user.id) throw new BadRequestException('You cannot remove yourself.');
-    if (targetUserId === meeting.createdById) throw new BadRequestException('The meeting host cannot be removed.');
+    if (targetUserId === meeting.hostId) throw new BadRequestException('The meeting host cannot be removed.');
     await this.prisma.meetingParticipant.upsert({
       where: { meetingId_userId: { meetingId, userId: targetUserId } },
       create: { meetingId, userId: targetUserId, revokedAt: new Date(), revokedById: user.id },
@@ -275,7 +278,7 @@ export class MeetingsService {
       status: meeting.status,
       createdAt: meeting.createdAt,
       endedAt: meeting.endedAt,
-      hostId: meeting.createdById,
+      hostId: meeting.hostId,
       hostName: extra.hostName,
       isHost: extra.isHost,
     };

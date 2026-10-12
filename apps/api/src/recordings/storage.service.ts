@@ -1,8 +1,8 @@
-import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { APP_CONFIG, AppConfig } from '../config';
 
-/** Private MinIO access with the API's least-privilege identity (read/delete in the recordings bucket). */
+/** Private MinIO access with the API's least-privilege identity (read/delete recordings; write avatars/* only). */
 @Injectable()
 export class StorageService {
   private readonly client: S3Client;
@@ -32,6 +32,10 @@ export class StorageService {
 
   get(key: string, range?: string): Promise<GetObjectCommandOutput> {
     return this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key, Range: range }));
+  }
+
+  async put(key: string, body: Buffer, contentType: string): Promise<void> {
+    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
   }
 
   async delete(key: string): Promise<void> {

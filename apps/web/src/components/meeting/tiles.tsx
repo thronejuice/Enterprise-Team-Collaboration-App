@@ -3,7 +3,7 @@
 import { isTrackReference, TrackReferenceOrPlaceholder, useIsMuted, useIsSpeaking, VideoTrack } from '@livekit/components-react';
 import { Participant, Track } from 'livekit-client';
 import { MicOff, MonitorUp } from 'lucide-react';
-import { initials } from '@/components/app-shell';
+import { Avatar } from '@/components/avatar';
 import { cx } from '@/components/ui';
 
 export function isHostParticipant(p: Participant): boolean {
@@ -11,6 +11,15 @@ export function isHostParticipant(p: Participant): boolean {
     return JSON.parse(p.metadata || '{}').role === 'host';
   } catch {
     return false;
+  }
+}
+
+function avatarVersionOf(p: Participant): number | null {
+  try {
+    const v = JSON.parse(p.metadata || '{}').avatarVersion;
+    return typeof v === 'number' ? v : null;
+  } catch {
+    return null;
   }
 }
 
@@ -54,9 +63,7 @@ export function ParticipantTile({ trackRef, className }: { trackRef: TrackRefere
         />
       ) : (
         <div className="grid size-full place-items-center">
-          <div className="grid size-16 place-items-center rounded-full bg-surface-3 text-lg font-semibold text-fg-muted">
-            {initials(participant.name || participant.identity)}
-          </div>
+          <Avatar userId={participant.identity} name={participant.name || participant.identity} avatarVersion={avatarVersionOf(participant)} size="xl" className="text-fg-muted" />
         </div>
       )}
       <NameBadge participant={participant} screen={isScreen} />
