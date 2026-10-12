@@ -26,10 +26,19 @@ const person = (tag: string, role: 'HOST' | 'MEMBER' | 'ADMIN' = 'MEMBER') => ({
 });
 
 async function apiAs(email: string, password: string): Promise<APIRequestContext> {
-  const ctx = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE } });
+  // API clients identify as a phone so they never count as a computer under the one-computer rule.
+  const ctx = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE, 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' } });
   const res = await ctx.post('/api/auth/login', { data: { email, password } });
   expect(res.status(), `login ${email}`).toBe(200);
   return ctx;
+}
+
+/** Clears the admin's sessions left by earlier runs, so this run's browser logins are not refused as a second computer. */
+async function resetAdminSessions() {
+  const api = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
+  const me = (await (await api.get('/api/auth/me')).json()) as { user: { id: string } };
+  expect((await api.post(`/api/admin/users/${me.user.id}/sessions/revoke-all`)).status()).toBe(204);
+  await api.dispose();
 }
 
 /** A new account's one forced password change, done through the API. */
@@ -37,6 +46,8 @@ async function completeFirstSignIn(email: string, newPassword = PASSWORD) {
   const ctx = await apiAs(email, TEMP);
   const res = await ctx.post('/api/auth/password', { data: { currentPassword: TEMP, newPassword } });
   expect(res.status(), `first password change ${email}`).toBe(204);
+  const accepted = await ctx.post('/api/auth/privacy-notice');
+  expect(accepted.status(), `privacy notice ${email}`).toBe(201);
   await ctx.dispose();
 }
 
@@ -74,7 +85,10 @@ test.describe.serial('profile, directory and offboarding', () => {
   let mikaId = '';
 
   test.beforeAll(async () => {
+    await resetAdminSessions();
     admin = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
+    // The seeded admin accepts the privacy notice once, like any user (v0.1.1 PDPA).
+    expect((await admin.post('/api/auth/privacy-notice')).status()).toBe(201);
     hanaId = (await createUser(admin, hana)).id;
     mikaId = (await createUser(admin, mika)).id;
     await createUser(admin, otto);
@@ -97,6 +111,9 @@ test.describe.serial('profile, directory and offboarding', () => {
     await page.getByLabel('New password (min. 10 characters)').fill(PASSWORD);
     await page.getByLabel('Confirm new password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Save and continue' }).click();
+    // Next comes the privacy notice (PDPA), which must be accepted before Home.
+    await expect(page).toHaveURL(/\/privacy-notice/);
+    await page.getByRole('button', { name: 'I have read and accept' }).click();
     await expect(page.getByRole('heading', { name: /Welcome/ })).toBeVisible();
     await ctx.close();
   });

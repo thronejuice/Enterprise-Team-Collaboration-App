@@ -10,6 +10,7 @@ import { isUniqueViolation, PrismaService } from '../common/prisma.service';
 import { AuthUser } from '../common/request';
 import { LiveKitService } from '../livekit/livekit.service';
 import { AvatarService } from './avatar.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { effectiveAtFor } from './profile';
 
 type Tx = Prisma.TransactionClient;
@@ -43,6 +44,7 @@ export class SuspensionService {
     private readonly livekit: LiveKitService,
     private readonly audit: AuditService,
     private readonly avatars: AvatarService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async offboardingSummary(userId: string) {
@@ -150,6 +152,7 @@ export class SuspensionService {
       }
     });
     // Rooms and recordings that were handed over stay with the new host (no automatic transfer back).
+    await this.notifications.notify([userId], 'account.reactivated', 'Account reactivated', 'Your account was reactivated. You will be asked to choose a new password when you sign in.');
     await this.audit.log({
       action: 'user.reactivated',
       actorId: admin.id,
@@ -187,6 +190,12 @@ export class SuspensionService {
     });
     await this.sessions.destroyAllForUser(userId);
     await this.audit.log({ action: 'user.anonymized', actorId: admin.id, targetType: 'user', targetId: userId, ip });
+    await this.notifications.notify(
+      await this.notifications.otherAdminIds(admin.id),
+      'admin.user_anonymized',
+      'User anonymized',
+      `${admin.displayName} anonymized a user account. This cannot be undone.`,
+    );
   }
 
   /** Runs every minute: applies SCHEDULED suspensions whose effective time has passed. Each one is its own transaction. */

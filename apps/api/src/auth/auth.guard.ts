@@ -6,6 +6,7 @@ import { PrismaService } from '../common/prisma.service';
 import { AppRequest } from '../common/request';
 import { ALLOW_MUST_CHANGE, IS_PUBLIC, ROLES } from './auth.decorators';
 import { coded } from '../common/errors';
+import { PRIVACY_NOTICE_VERSION } from '../common/privacy';
 import { SessionService } from './session.service';
 
 export const SESSION_COOKIE = 'sid';
@@ -41,7 +42,7 @@ export class AuthGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, email: true, displayName: true, role: true, isActive: true, mustChangePassword: true },
+      select: { id: true, email: true, displayName: true, role: true, isActive: true, mustChangePassword: true, privacyNoticeVersion: true },
     });
     if (!user || !user.isActive) {
       await this.sessions.destroy(token);
@@ -52,6 +53,10 @@ export class AuthGuard implements CanActivate {
 
     if (user.mustChangePassword && !allowMustChange) {
       throw coded(HttpStatus.FORBIDDEN, 'PASSWORD_CHANGE_REQUIRED', 'You must change your password before continuing.');
+    }
+
+    if (user.privacyNoticeVersion !== PRIVACY_NOTICE_VERSION && !allowMustChange) {
+      throw coded(HttpStatus.FORBIDDEN, 'PRIVACY_NOTICE_REQUIRED', 'Please read and accept the privacy notice before continuing.');
     }
 
     const roles = this.reflector.getAllAndOverride<UserRole[] | undefined>(ROLES, targets);

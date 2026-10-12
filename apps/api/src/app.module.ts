@@ -19,6 +19,9 @@ import { DepartmentsController } from './users/departments.controller';
 import { AvatarService } from './users/avatar.service';
 import { ImportService } from './users/import.service';
 import { SuspensionService } from './users/suspension.service';
+import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationsService } from './notifications/notifications.service';
+import { RetentionService } from './retention/retention.service';
 
 @Module({
   imports: [GlobalModule, ScheduleModule.forRoot()],
@@ -28,6 +31,7 @@ import { SuspensionService } from './users/suspension.service';
     UsersController,
     MeController,
     DepartmentsController,
+    NotificationsController,
     AuditController,
     MeetingsController,
     RecordingsController,
@@ -41,6 +45,8 @@ import { SuspensionService } from './users/suspension.service';
     AvatarService,
     ImportService,
     SuspensionService,
+    NotificationsService,
+    RetentionService,
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })

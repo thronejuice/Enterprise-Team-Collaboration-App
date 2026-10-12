@@ -9,6 +9,7 @@ import { useAuth, useRequireUser } from '@/lib/auth';
 import { initials } from '@/lib/format';
 import { Avatar } from './avatar';
 import { Logo } from './logo';
+import { NotificationBell } from './notification-bell';
 import { WhatsNew } from './whats-new';
 import { cx, Spinner } from './ui';
 
@@ -29,9 +30,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
 
-  // Accounts with a forced password change see only the change-password page until it is done.
+  // Before the app: a forced password change first, then the privacy notice. The API enforces both; this sends people there.
   useEffect(() => {
     if (user?.mustChangePassword) router.replace('/change-password');
+    else if (user && !user.privacyNoticeAccepted) router.replace('/privacy-notice');
   }, [user, router]);
 
   useEffect(() => {
@@ -99,7 +101,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             {open && <span className="truncate text-sm">{label}</span>}
           </Link>
         ))}
-        <div className={cx('mt-auto flex gap-2', open ? 'items-center justify-between' : 'flex-col items-center')}>
+        <div className="mt-auto">
+          <NotificationBell collapsed={!open} />
+        </div>
+        <div className={cx('mt-1 flex gap-2', open ? 'items-center justify-between' : 'flex-col items-center')}>
           <Link
             href="/profile"
             title={`${user.displayName} · ${user.role}: My profile`}
@@ -121,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
-      {!user.mustChangePassword && <WhatsNew />}
+      {!user.mustChangePassword && user.privacyNoticeAccepted && <WhatsNew />}
     </div>
   );
 }

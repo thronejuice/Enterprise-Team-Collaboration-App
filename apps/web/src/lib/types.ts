@@ -7,6 +7,7 @@ export interface User {
   displayName: string;
   role: UserRole;
   mustChangePassword: boolean;
+  privacyNoticeAccepted: boolean;
   avatarVersion: number | null;
 }
 

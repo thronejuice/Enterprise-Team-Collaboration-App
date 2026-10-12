@@ -11,5 +11,8 @@ export const Public = () => SetMetadata(IS_PUBLIC, true);
 /** Restrict a controller or handler to the given global roles. */
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES, roles);
 
-/** Endpoints a user with mustChangePassword may still call (everything else answers 403 PASSWORD_CHANGE_REQUIRED). */
+/**
+ * Endpoints a user may still call before finishing onboarding: changing the password (403 PASSWORD_CHANGE_REQUIRED)
+ * or accepting the privacy notice (403 PRIVACY_NOTICE_REQUIRED). Everything else is refused until both are done.
+ */
 export const AllowMustChangePassword = () => SetMetadata(ALLOW_MUST_CHANGE, true);

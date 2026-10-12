@@ -28,6 +28,7 @@ import { AuthUser, ClientIp, CurrentUser } from '../common/request';
 import { RateLimitService } from '../auth/rate-limit.service';
 import { AVATAR_MAX_BYTES, AvatarService } from './avatar.service';
 import { DirectoryQuery } from './queries';
+import { PRIVACY_NOTICE_VERSION } from '../common/privacy';
 import { DIRECTORY_PAGE_SIZE, DISPLAY_NAME_MAX, normalizePhone, requiredText } from './profile';
 import { directoryView, profileView, userInclude } from './views';
 
@@ -154,6 +155,42 @@ export class MeController {
     res.setHeader('Cache-Control', 'private, max-age=86400');
     // A raw Buffer would be serialised as JSON; StreamableFile sends the image bytes.
     return new StreamableFile(bytes, { type: 'image/webp' });
+  }
+
+  /** PDPA access request: everything the system holds about the signed-in user, as one JSON file. */
+  @Get('me/data-export')
+  async myDataExport(@CurrentUser() user: AuthUser, @ClientIp() ip: string, @Res({ passthrough: true }) res: Response) {
+    const [profile, hosted, participations, recordings, notifications, audit] = await Promise.all([
+      this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, include: userInclude }),
+      this.prisma.meeting.findMany({ where: { createdById: user.id }, select: { id: true, title: true, status: true, createdAt: true, endedAt: true } }),
+      this.prisma.meetingParticipant.findMany({
+        where: { userId: user.id },
+        select: { admittedAt: true, firstJoinedAt: true, lastJoinedAt: true, revokedAt: true, meeting: { select: { id: true, title: true, createdAt: true } } },
+      }),
+      this.prisma.recording.findMany({ where: { requestedById: user.id }, select: { id: true, status: true, createdAt: true, deletedAt: true } }),
+      this.prisma.notification.findMany({ where: { userId: user.id }, select: { kind: true, title: true, body: true, createdAt: true, readAt: true }, orderBy: { createdAt: 'desc' } }),
+      this.prisma.auditLog.findMany({
+        where: { OR: [{ actorId: user.id }, { targetType: 'user', targetId: user.id }] },
+        select: { createdAt: true, action: true, success: true, metadata: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+    const exported = {
+      exportedAt: new Date().toISOString(),
+      profile: profileView(profile),
+      privacyNoticeAcceptedVersion: profile.privacyNoticeVersion,
+      currentPrivacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+      meetingsCreated: hosted,
+      meetingsJoined: participations.map((p) => ({ ...p.meeting, ...{ admittedAt: p.admittedAt, firstJoinedAt: p.firstJoinedAt, lastJoinedAt: p.lastJoinedAt, revokedAt: p.revokedAt } })),
+      recordingsRequested: recordings,
+      notifications,
+      activityLog: audit,
+    };
+    await this.audit.log({ action: 'me.data_exported', actorId: user.id, targetType: 'user', targetId: user.id, ip });
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="my-data-${new Date().toISOString().slice(0, 10)}.json"`);
+    res.setHeader('Cache-Control', 'no-store');
+    return JSON.stringify(exported, null, 2);
   }
 
   /** Active departments, for dropdowns and the directory filter. */

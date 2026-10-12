@@ -37,9 +37,9 @@ async function send(path: string, init: { method: string; body?: BodyInit | null
   if (res.ok) return res;
   const text = await res.text();
   const body = text ? (safeParse(text) as unknown) : undefined;
-  if (codeFrom(body) === 'PASSWORD_CHANGE_REQUIRED' && typeof window !== 'undefined' && window.location.pathname !== '/change-password') {
-    window.location.assign('/change-password');
-  }
+  const code = codeFrom(body);
+  const onboarding = code === 'PASSWORD_CHANGE_REQUIRED' ? '/change-password' : code === 'PRIVACY_NOTICE_REQUIRED' ? '/privacy-notice' : undefined;
+  if (onboarding && typeof window !== 'undefined' && window.location.pathname !== onboarding) window.location.assign(onboarding);
   const retry = body && typeof body === 'object' && 'retryAfterSeconds' in body ? Number((body as { retryAfterSeconds: number }).retryAfterSeconds) : undefined;
   throw new ApiError(res.status, messageFrom(body, res.status), retry, codeFrom(body));
 }

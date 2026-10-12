@@ -128,7 +128,8 @@ function setup() {
   const sessions = { destroyAllForUser: jest.fn(async () => undefined) };
   const livekit = { removeParticipant: jest.fn(async () => undefined) };
   const avatars = { remove: jest.fn(async () => undefined) };
-  const service = new SuspensionService(db as never, sessions as never, livekit as never, audit as never, avatars as never);
+  const notifications = { notify: jest.fn(async () => undefined), otherAdminIds: jest.fn(async () => []) };
+  const service = new SuspensionService(db as never, sessions as never, livekit as never, audit as never, avatars as never, notifications as never);
   const admin = db.addUser({ role: 'ADMIN' });
   return { db, service, audit, sessions, livekit, avatars, admin };
 }

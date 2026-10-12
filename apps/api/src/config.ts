@@ -28,6 +28,8 @@ function intList(name: string, fallback: number[]): number[] {
 
 export interface AppConfig {
   port: number;
+  /** Days to keep audit rows and recordings before the daily purge (0 = keep forever). */
+  retention: { auditDays: number; recordingDays: number };
   publicOrigin: string;
   cookieSecure: boolean;
   sessionTtlSeconds: number;
@@ -67,6 +69,7 @@ export function loadConfig(): AppConfig {
   return {
     port: int('API_PORT', 3001),
     publicOrigin: `https://${hostname}`,
+    retention: { auditDays: int('AUDIT_RETENTION_DAYS', 365), recordingDays: int('RECORDING_RETENTION_DAYS', 180) },
     cookieSecure: process.env.COOKIE_SECURE !== 'false',
     sessionTtlSeconds: int('SESSION_TTL_HOURS', 12) * 3600,
     redisUrl: required('REDIS_URL'),

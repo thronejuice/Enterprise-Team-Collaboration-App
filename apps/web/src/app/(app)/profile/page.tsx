@@ -1,12 +1,13 @@
 'use client';
 
-import { LogOut, Save, Trash2, Upload } from 'lucide-react';
+import { Download, FileText, LogOut, Save, Trash2, Upload } from 'lucide-react';
+import Link from 'next/link';
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import { Avatar } from '@/components/avatar';
 import { PasswordForm } from '@/components/password-form';
 import { useToast } from '@/components/toast';
-import { Button, Card, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
-import { api, apiUpload, errorMessage } from '@/lib/api';
+import { Button, buttonClass, Card, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
+import { api, apiUpload, downloadCsv, errorMessage } from '@/lib/api';
 import { useAuth, useRequireUser } from '@/lib/auth';
 import { formatDateTime, formatRelative } from '@/lib/format';
 import type { Profile, SessionInfo } from '@/lib/types';
@@ -237,6 +238,20 @@ export default function ProfilePage() {
             />
           </Card>
           <SessionsSection />
+          <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
+            <div>
+              <h2 className="font-semibold">Your data</h2>
+              <p className="text-[13px] text-fg-subtle">Download a copy of what the system holds about you, or read the privacy notice again.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => downloadCsv('/me/data-export').catch((e) => toast(errorMessage(e), 'error'))} icon={<Download className="size-4" />}>
+                Download my data
+              </Button>
+              <Link href="/privacy-notice" className={buttonClass('secondary')}>
+                <FileText className="size-4" /> Privacy notice
+              </Link>
+            </div>
+          </Card>
         </div>
       )}
     </>

@@ -148,18 +148,22 @@ export class SessionService {
     return items.sort((a, b) => (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? ''));
   }
 
-  /** Live computer (non-mobile) sessions of a user, for the one-computer-at-a-time rule. */
-  async desktopSessions(userId: string): Promise<{ key: string; label: string; ip?: string }[]> {
+  /** Every live session of a user as a device: used for the one-computer rule and for new-device alerts. */
+  async liveDevices(userId: string): Promise<{ key: string; label: string; ip?: string; desktop: boolean }[]> {
     const ids = await this.redis.client.smembers(`user-sess:${userId}`);
-    const found: { key: string; label: string; ip?: string }[] = [];
+    const found: { key: string; label: string; ip?: string; desktop: boolean }[] = [];
     for (const id of ids) {
       const raw = await this.redis.client.get(`sess:${id}`);
       if (!raw) continue;
       const data = JSON.parse(raw) as SessionData;
-      if (!isDesktop(data.userAgent)) continue;
-      found.push({ key: deviceKey(data.ip, data.userAgent), label: deviceLabel(data.userAgent), ip: data.ip });
+      found.push({ key: deviceKey(data.ip, data.userAgent), label: deviceLabel(data.userAgent), ip: data.ip, desktop: isDesktop(data.userAgent) });
     }
     return found;
+  }
+
+  /** Live computer (non-mobile) sessions of a user, for the one-computer-at-a-time rule. */
+  async desktopSessions(userId: string) {
+    return (await this.liveDevices(userId)).filter((d) => d.desktop);
   }
 
   /** Signs out one session by its public id. Returns false if the user has no such live session. */
