@@ -106,3 +106,28 @@ describe('RateLimitService', () => {
     await expect(service.assertNotLocked([off])).resolves.toBeUndefined();
   });
 });
+
+describe('admin unlock (security review #3)', () => {
+  it('reports the remaining lock and clears lock, counter and escalation level', async () => {
+    const store = new FakeStore();
+    const service = RateLimitService.withStore(store, config);
+    const limit = service.userLimit('login-email', 'victim@example.com');
+
+    expect(await service.lockedSeconds([limit])).toBeLessThanOrEqual(0);
+    for (let i = 0; i < 5; i++) await service.recordFailure([limit]);
+    expect(await service.lockedSeconds([limit])).toBe(60);
+
+    await service.unlock([limit]);
+    expect(await service.lockedSeconds([limit])).toBeLessThanOrEqual(0);
+    await expect(service.assertNotLocked([limit])).resolves.toBeUndefined();
+    // Escalation starts over: the next lockout is the first (60 s), not the second (300 s).
+    for (let i = 0; i < 4; i++) await service.recordFailure([limit]);
+    expect(await service.recordFailure([limit])).toBe(60);
+  });
+
+  it('a disabled limit (0 failures) never reports a lock', async () => {
+    const service = RateLimitService.withStore(new FakeStore(), config);
+    const ipLimit = { ...service.ipLimit('login-ip', '1.2.3.4'), maxFailures: 0 };
+    expect(await service.lockedSeconds([ipLimit])).toBe(0);
+  });
+});

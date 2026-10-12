@@ -141,7 +141,8 @@ export class AuthController {
         throw coded(
           HttpStatus.CONFLICT,
           'DEVICE_LIMIT',
-          `You are already signed in on ${other.label}${other.ip ? ` (${other.ip})` : ''}. Sign out there first, then try again.`,
+          // No device or IP here: whoever has the password is not necessarily the owner (security review #7).
+          'You are already signed in on another computer. Sign out there first, then try again.',
         );
       }
     }

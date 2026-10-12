@@ -107,6 +107,9 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
   }, [isRecording, toast]);
 
   useDataChannel('moderation', (msg) => {
+    // Only the server (RoomService.SendData) may send moderation messages, and those have no sender.
+    // Any participant can publish data on this topic, so a message with a sender is a forgery.
+    if (msg.from) return;
     try {
       const payload = JSON.parse(new TextDecoder().decode(msg.payload)) as { type?: string; by?: string };
       if (payload.type === 'muted_by_host') toast(`${payload.by ?? 'The host'} muted your microphone.`, 'info');

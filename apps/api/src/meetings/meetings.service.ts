@@ -14,6 +14,7 @@ import { isUniqueViolation, PrismaService } from '../common/prisma.service';
 import { AuthUser } from '../common/request';
 import { RateLimitService, TooManyAttemptsException } from '../auth/rate-limit.service';
 import { LiveKitService } from '../livekit/livekit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { RecordingsService } from '../recordings/recordings.service';
 import { canAccessMeeting, canManageMeeting } from './access';
 import { createWithUniqueCode, isValidRoomCode, RoomCodeExhaustedError } from './room-code';
@@ -29,6 +30,7 @@ export class MeetingsService {
     private readonly rateLimit: RateLimitService,
     private readonly audit: AuditService,
     private readonly recordings: RecordingsService,
+    private readonly notifications: NotificationsService,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
@@ -103,8 +105,17 @@ export class MeetingsService {
     }
     if (!existing) {
       await this.prisma.meetingParticipant.create({ data: { meetingId: meeting.id, userId: user.id } });
+      // A 4-digit code can be guessed, so the host is told who got in with it (security review #4).
+      if (meeting.hostId !== user.id) {
+        await this.notifications.notify(
+          [meeting.hostId],
+          'meeting.joined_by_code',
+          'Someone joined with the room code',
+          `${user.displayName} joined "${meeting.title}" using its room code. If you do not know them, remove them from the meeting.`,
+        );
+      }
     }
-    await this.rateLimit.recordSuccess([limits[0]]);
+    // No recordSuccess here: clearing the counter on success let a user reset it by joining their own room (security review #1).
     await this.audit.log({ action: 'meeting.code_accepted', actorId: user.id, targetType: 'meeting', targetId: meeting.id, ip });
     return { meetingId: meeting.id };
   }

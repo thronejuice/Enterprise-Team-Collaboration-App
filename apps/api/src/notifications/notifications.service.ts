@@ -7,6 +7,7 @@ export type NotificationKind =
   | 'account.reactivated'
   | 'login.new_device'
   | 'login.blocked_other_computer'
+  | 'meeting.joined_by_code'
   | 'admin.data_exported'
   | 'admin.users_imported'
   | 'admin.user_anonymized';

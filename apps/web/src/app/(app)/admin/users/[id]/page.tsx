@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, CalendarX, Eraser, KeyRound, LogOut, Save, ShieldOff, Trash2, UserCheck, UserX, X } from 'lucide-react';
+import { ArrowLeft, CalendarX, Eraser, KeyRound, LockOpen, LogOut, Save, ShieldOff, Trash2, UserCheck, UserX, X } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
@@ -594,6 +594,7 @@ export default function AdminUserPage() {
   const { id } = useParams<{ id: string }>();
   const { user: me } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const isAdmin = me?.role === 'ADMIN';
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -613,6 +614,16 @@ export default function AdminUserPage() {
       api<Department[]>('/admin/departments').then(setDepartments).catch(() => undefined);
     }
   }, [me, isAdmin, load, router]);
+
+  async function unlockLogin() {
+    try {
+      await api(`/admin/users/${id}/unlock-login`, { method: 'POST' });
+      toast('Sign-in unlocked', 'success');
+      load();
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+    }
+  }
 
   if (!isAdmin) return null;
   if (error) return <ErrorText>{error}</ErrorText>;
@@ -666,6 +677,14 @@ export default function AdminUserPage() {
               <dd>{user.mustChangePassword ? 'Yes' : 'No'}</dd>
             </div>
           </dl>
+          {user.loginLockedSeconds > 0 && !anonymized && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-[13px]">
+              <span>Sign-in is locked for about {Math.ceil(user.loginLockedSeconds / 60)} more minute(s) after wrong passwords.</span>
+              <Button size="sm" variant="secondary" icon={<LockOpen className="size-4" />} onClick={unlockLogin}>
+                Unlock sign-in
+              </Button>
+            </div>
+          )}
         </Card>
 
         {!anonymized && <StatusSection user={user} onChanged={load} />}
