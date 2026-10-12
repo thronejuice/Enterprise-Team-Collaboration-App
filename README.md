@@ -4,6 +4,8 @@
 
 **เวอร์ชันปัจจุบัน: 0.1.1** (User Profile & Offboarding) · ดูรายละเอียดในหัวข้อ [เวอร์ชันและการอัปเกรด](#เวอร์ชันและการอัปเกรด)
 
+📖 **คู่มือการใช้งาน (ภาษาไทย, มีภาพประกอบ):** [docs/USER-MANUAL.md](docs/USER-MANUAL.md) — ตั้งแต่ติดตั้ง การป้อนข้อมูลโดย Admin จนถึงการสร้างห้องประชุม แบ่งตามบทบาท
+
 ## โปรเจ็คนี้คืออะไร ใช้ทำอะไร
 
 - **ประชุมวิดีโอ/เสียง/แชร์หน้าจอ** แบบเรียลไทม์ผ่าน browser ไม่ต้องติดตั้งโปรแกรมเพิ่ม
@@ -96,6 +98,8 @@ docker compose up -d --build
 ```
 
 จากนั้นเปิด `https://comms-demo.home.arpa` (หรือค่า `DEMO_HOSTNAME` ใน `.env`) ต้องให้ hostname นี้ชี้ไปที่ LAN IP ของเครื่อง และเครื่องที่ใช้เปิดต้องเชื่อถือ certificate ของ mkcert
+
+ขั้นตอนติดตั้งแบบละเอียดทีละขั้น: [คู่มือ ส่วนที่ 2](docs/USER-MANUAL.md#2-การติดตั้ง-สำหรับผู้ดูแลระบบไอที)
 
 รายละเอียดการตั้งค่าเครือข่าย, Firewall และ certificate: [docs/SETUP.md](docs/SETUP.md), [docs/02-wsl2-network.md](docs/02-wsl2-network.md), [docs/03-https-certificates.md](docs/03-https-certificates.md)
 
