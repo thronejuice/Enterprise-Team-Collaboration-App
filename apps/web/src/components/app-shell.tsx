@@ -9,6 +9,7 @@ import { useAuth, useRequireUser } from '@/lib/auth';
 import { initials } from '@/lib/format';
 import { Avatar } from './avatar';
 import { Logo } from './logo';
+import { WhatsNew } from './whats-new';
 import { cx, Spinner } from './ui';
 
 const nav = [
@@ -120,6 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
+      {!user.mustChangePassword && <WhatsNew />}
     </div>
   );
 }

@@ -260,4 +260,26 @@ test.describe.serial('profile, directory and offboarding', () => {
     await device.ctx.close();
     await mine.ctx.close();
   });
+
+  // E2E 9 — the release dialog opens once per version and stays closed after it is dismissed.
+  test('9. the What\'s new dialog opens once and is remembered', async ({ browser }) => {
+    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } }); // nothing seen yet
+    const page = await ctx.newPage();
+    await page.goto('/login');
+    await page.getByLabel('Work email').fill(otto.email);
+    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: /What's new in \d+\.\d+\.\d+/ })).toBeVisible();
+    await expect(dialog.getByText('My profile')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Got it' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('heading', { name: /Welcome/ })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: /Welcome/ })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await ctx.close();
+  });
 });

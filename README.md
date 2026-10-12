@@ -2,6 +2,8 @@
 
 ระบบประชุมออนไลน์ (video meeting) สำหรับองค์กร รันบนเครื่องเดียวและให้ผู้ใช้เข้าผ่าน browser ในเครือข่าย Wi-Fi/LAN เดียวกัน สร้างขึ้นเพื่อใช้เป็น **Local LAN Demo** ให้ลูกค้าทดลองใช้งานจริง (สูงสุด 10 คนต่อห้อง)
 
+**เวอร์ชันปัจจุบัน: 0.1.1** (User Profile & Offboarding) · ดูรายละเอียดในหัวข้อ [เวอร์ชันและการอัปเกรด](#เวอร์ชันและการอัปเกรด)
+
 ## โปรเจ็คนี้คืออะไร ใช้ทำอะไร
 
 - **ประชุมวิดีโอ/เสียง/แชร์หน้าจอ** แบบเรียลไทม์ผ่าน browser ไม่ต้องติดตั้งโปรแกรมเพิ่ม
@@ -12,6 +14,7 @@
 - **จัดการผู้ใช้** โดย Admin: สร้างผู้ใช้ (ต้องมีรหัสพนักงาน) ค้นหา/กรอง/Export CSV นำเข้าจาก CSV แก้ไขโปรไฟล์ เปลี่ยน role และดู Audit log
 - **Offboarding (v0.1.1)** Admin ระงับผู้ใช้ทันทีหรือตั้งวันทำงานวันสุดท้ายล่วงหน้า โดยห้องประชุมและ Recording ของผู้ใช้จะโอนให้ผู้รับช่วง และสามารถเปิดบัญชีคืน หรือ Anonymize ข้อมูลส่วนตัวตาม PDPA ได้
 - **หน้า Connection test** สำหรับตรวจว่า browser/เครือข่ายของผู้ใช้เชื่อมต่อได้
+- **หน้าต่าง "What's new"** แสดงสิ่งที่เปลี่ยนในเวอร์ชันนั้นครั้งเดียวต่อ browser หลังล็อกอิน (แก้เนื้อหาที่ `apps/web/src/lib/release-notes.ts`)
 
 ### สิทธิ์ตาม Role
 
@@ -33,6 +36,26 @@
 | บังคับเปลี่ยนรหัสผ่านเมื่อเข้าใช้ครั้งแรกหรือหลัง reset | 0.1.1 | ทุกคน |
 | ค้นหา/กรอง/Export CSV และนำเข้าผู้ใช้จาก CSV | 0.1.1 | Admin |
 | เปิดห้องประชุม, Room Code, Recording | 0.1.0 | ตามตารางด้านบน |
+
+## เวอร์ชันและการอัปเกรด
+
+| เวอร์ชัน | สิ่งที่เปลี่ยน |
+|---|---|
+| **0.1.1** | โปรไฟล์ผู้ใช้ + Avatar, People directory, แผนก, Sessions, บังคับเปลี่ยนรหัสผ่าน, Offboarding (ระงับทันที/ล่วงหน้า + โอนห้อง), Reactivate/Anonymize, ค้นหา/Export/Import CSV, แก้ช่องโหว่จาก security review |
+| 0.1.0 | ประชุมวิดีโอ, Room Code, Recording, จัดการผู้ใช้เบื้องต้น |
+
+เอกสารของ 0.1.1: [สเปก](docs/releases/v0.1.1.md) · [Security review และสถานะการแก้ไข](docs/releases/v0.1.1-security-review.md)
+
+**อัปเกรดจาก 0.1.0**
+
+```bash
+git pull && docker compose up -d --build   # API รัน migration 0002 ให้เองตอนเริ่ม
+docker compose up minio-init               # ให้ policy ใหม่ของ MinIO มีผล (api เขียนได้เฉพาะ avatars/*)
+```
+
+- Migration เติม `host_id` ของทุกห้องจากผู้สร้างเดิม จึงไม่ต้องย้ายข้อมูลเอง
+- บัญชีเดิมไม่มีรหัสพนักงาน ใช้งานต่อได้ตามปกติ Admin เติมภายหลังได้ที่หน้ารายละเอียดผู้ใช้
+- ถ้าไม่เหลือ Admin ที่ใช้งานได้ ดูขั้นตอนกู้ระบบใน [docs/SETUP.md](docs/SETUP.md)
 
 ## เทคโนโลยีที่ใช้
 
@@ -71,9 +94,14 @@ docker compose up -d --build
 
 ```bash
 pnpm typecheck
-pnpm test
+pnpm test          # unit test ฝั่ง API (รวม state machine การระงับ, CSV, สิทธิ์)
 pnpm test:e2e      # end-to-end จาก container แยก
 ```
+
+- E2E ทั้ง 12 ข้อรันผ่าน `tests/e2e/run.sh` ใน container ของ Playwright
+- **Scenario 5** (การระงับล่วงหน้า) ต้องเข้าถึงฐานข้อมูล ให้รันด้วย `E2E_NETWORK=enterprise-comms-demo_backend tests/e2e/run.sh` ถ้าไม่ตั้งค่านี้ scenario 5 จะถูกข้าม และ scenario 6 จะล้มตามเพราะพึ่งพากัน
+- **Windows:** ก่อนให้เครื่องอื่นใน LAN เข้าใช้ ต้องรัน `scripts/windows/setup-firewall.ps1 -Subnet <subnet ของ LAN>` ใน PowerShell แบบ Administrator (443/tcp, 7881/tcp, 7882/udp)
+- **ภาพ/เสียงไม่มาหลังรีสตาร์ต Docker หรือเครื่อง:** รัน `docker compose restart livekit egress` (เส้นทางสื่อ UDP อาจค้าง) และตรวจว่า `caddy` ยังรันอยู่ด้วย `docker compose ps`
 
 ## Username / Password สำหรับทดสอบ
 
@@ -110,3 +138,7 @@ pnpm test:e2e      # end-to-end จาก container แยก
 - ห้ามส่ง LiveKit API secret หรือ MinIO secret ไปฝั่ง frontend
 - Room Code ไม่ใช่หลักฐานยืนยันตัวตน ผู้ใช้ต้องล็อกอินเสมอ
 - ห้ามถือว่า Recording สำเร็จจนกว่าจะเปิดไฟล์ที่บันทึกแล้วเล่นได้จริง
+- ระบบกันไม่ให้ระงับหรือลด role ของ Admin คนสุดท้าย และผู้ใช้ที่ถูกระงับจะถูกตัด session และเตะออกจากห้องทันที
+- Anonymize ย้อนกลับไม่ได้ ใช้เมื่อจำเป็นต้องลบข้อมูลส่วนตัว (PDPA) เท่านั้น
+- รหัสผ่านชั่วคราวจากการนำเข้า CSV แสดงครั้งเดียวในไฟล์ที่ดาวน์โหลด ให้เก็บอย่างปลอดภัยและลบหลังแจกจ่าย
+- ข้อที่ยังเปิดอยู่จาก security review (รหัสผ่าน 12 ตัว, อายุ session สูงสุด, CSP, อัปเกรด dependency) วางแผนไว้ใน 0.1.2
