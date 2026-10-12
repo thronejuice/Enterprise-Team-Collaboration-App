@@ -7,5 +7,7 @@ onlyBuiltDependencies:
   - prisma
   - argon2
   - "@nestjs/core"
-  - sharp
   - unrs-resolver
+# Next.js pulls in sharp (and its LGPL libvips binary) only for next/image optimisation, which this app does not use.
+overrides:
+  sharp: "-"
