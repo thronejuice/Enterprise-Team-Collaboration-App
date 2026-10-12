@@ -19,13 +19,15 @@ import type { Response } from 'express';
 import { APP_CONFIG, AppConfig } from '../config';
 import { AuditService } from '../audit/audit.service';
 import { coded } from '../common/errors';
+import { PRIVACY_NOTICE_VERSION } from '../common/privacy';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../common/prisma.service';
 import { AppRequest, AuthUser, ClientIp, CurrentUser, clientIp } from '../common/request';
 import { AllowMustChangePassword, Public } from './auth.decorators';
 import { SESSION_COOKIE } from './auth.guard';
 import { dummyVerify, hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from './passwords';
 import { RateLimitService, TooManyAttemptsException } from './rate-limit.service';
-import { SessionService } from './session.service';
+import { deviceKey, deviceLabel, isDesktop, SessionService } from './session.service';
 
 class LoginDto {
   @IsEmail()
@@ -55,6 +57,7 @@ export function toSessionUser(user: {
   displayName: string;
   role: string;
   mustChangePassword: boolean;
+  privacyNoticeVersion: string | null;
   avatarUpdatedAt: Date | null;
 }) {
   return {
@@ -63,6 +66,7 @@ export function toSessionUser(user: {
     displayName: user.displayName,
     role: user.role,
     mustChangePassword: user.mustChangePassword,
+    privacyNoticeAccepted: user.privacyNoticeVersion === PRIVACY_NOTICE_VERSION,
     avatarVersion: user.avatarUpdatedAt ? user.avatarUpdatedAt.getTime() : null,
   };
 }
@@ -74,6 +78,7 @@ export class AuthController {
     private readonly sessions: SessionService,
     private readonly rateLimit: RateLimitService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
@@ -119,9 +124,40 @@ export class AuthController {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.rateLimit.recordSuccess([limits[0]]);
     const userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined;
-    const token = await this.sessions.create(user.id, { ip: clientIp(req), userAgent });
+    // One computer at a time: a PC/notebook is refused while another computer is signed in. Phones and tablets are not limited.
+    // The password was right, so this does not count as a failed attempt.
+    if (isDesktop(userAgent)) {
+      const key = deviceKey(ip, userAgent);
+      const other = (await this.sessions.desktopSessions(user.id)).find((d) => d.key !== key);
+      if (other) {
+        await this.audit.log({ action: 'auth.login_failed', actorId: user.id, ip: ip, success: false, metadata: { email, reason: 'device_limit' } });
+        await this.notifications.notify(
+          [user.id],
+          'login.blocked_other_computer',
+          'Sign-in refused',
+          `Someone used your password to sign in from ${ip}, but you are already signed in on ${other.label}. If this was not you, change your password.`,
+        );
+        throw coded(
+          HttpStatus.CONFLICT,
+          'DEVICE_LIMIT',
+          // No device or IP here: whoever has the password is not necessarily the owner (security review #7).
+          'You are already signed in on another computer. Sign out there first, then try again.',
+        );
+      }
+    }
+    await this.rateLimit.recordSuccess([limits[0]]);
+    const knownDevices = (await this.sessions.liveDevices(user.id)).map((d) => d.key);
+    const thisDevice = deviceKey(ip, userAgent);
+    const token = await this.sessions.create(user.id, { ip: ip, userAgent });
+    if (!knownDevices.includes(thisDevice)) {
+      await this.notifications.notify(
+        [user.id],
+        'login.new_device',
+        'New sign-in',
+        `Signed in on ${deviceLabel(userAgent)} (${ip}). If this was not you, sign out that device and change your password.`,
+      );
+    }
     const updated = await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
@@ -172,6 +208,21 @@ export class AuthController {
     });
     await this.sessions.destroyAllForUser(user.id, req.sessionToken);
     await this.audit.log({ action: 'auth.password_changed', actorId: user.id, ip });
+    await this.notifications.notify(
+      [user.id],
+      'password.changed',
+      'Password changed',
+      'Your password was changed and your other devices were signed out. If this was not you, contact your administrator now.',
+    );
+  }
+
+  /** Records acceptance of the current privacy notice version. */
+  @Post('privacy-notice')
+  @AllowMustChangePassword()
+  async acceptPrivacyNotice(@CurrentUser() user: AuthUser, @ClientIp() ip: string) {
+    const updated = await this.prisma.user.update({ where: { id: user.id }, data: { privacyNoticeVersion: PRIVACY_NOTICE_VERSION } });
+    await this.audit.log({ action: 'privacy.accepted', actorId: user.id, targetType: 'user', targetId: user.id, ip, metadata: { version: PRIVACY_NOTICE_VERSION } });
+    return { user: toSessionUser(updated) };
   }
 
   @Get('sessions')

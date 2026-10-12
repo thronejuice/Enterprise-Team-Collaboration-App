@@ -82,6 +82,18 @@ export class RateLimitService {
     return applied;
   }
 
+  /** Seconds left on the longest active lock among the limits, or 0. */
+  async lockedSeconds(limits: Limit[]): Promise<number> {
+    let longest = 0;
+    for (const limit of enabled(limits)) longest = Math.max(longest, await this.store.ttl(this.lockKey(limit)));
+    return longest;
+  }
+
+  /** Admin unlock: clears the lock, the failure counter and the escalation level. */
+  async unlock(limits: Limit[]): Promise<void> {
+    for (const limit of limits) await this.store.del(this.lockKey(limit), this.failKey(limit), this.levelKey(limit));
+  }
+
   async recordSuccess(limits: Limit[]): Promise<void> {
     for (const limit of limits) {
       await this.store.del(this.failKey(limit), this.levelKey(limit));

@@ -1,7 +1,7 @@
 'use client';
 
 import { createLocalAudioTrack, createLocalVideoTrack, LocalAudioTrack, LocalVideoTrack, Room, VideoPresets } from 'livekit-client';
-import { Camera, CameraOff, Mic, MicOff, ShieldCheck } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, ShieldCheck, Video } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button, cx, ErrorText, Label, Pill, Select } from '@/components/ui';
 import type { MeetingDetail } from '@/lib/types';
@@ -222,7 +222,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
         </div>
 
         <ErrorText>{error}</ErrorText>
-        <Button size="lg" className="mt-6" onClick={join} loading={joining}>
+        <Button icon={<Video className="size-4" />} size="lg" className="mt-6" onClick={join} loading={joining}>
           Join meeting
         </Button>
         <p className="mt-3 flex items-center gap-1.5 text-xs text-fg-subtle">

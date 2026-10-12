@@ -1,15 +1,16 @@
 'use client';
 
-import { Trash2, Upload } from 'lucide-react';
+import { Download, FileText, LogOut, Save, Trash2, Upload } from 'lucide-react';
+import Link from 'next/link';
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import { Avatar } from '@/components/avatar';
 import { PasswordForm } from '@/components/password-form';
 import { useToast } from '@/components/toast';
-import { Button, Card, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
-import { api, apiUpload, errorMessage } from '@/lib/api';
+import { Button, buttonClass, Card, ErrorText, Input, Label, PageHeader, Pill, Select, Spinner } from '@/components/ui';
+import { api, apiUpload, downloadCsv, errorMessage } from '@/lib/api';
 import { useAuth, useRequireUser } from '@/lib/auth';
 import { formatDateTime, formatRelative } from '@/lib/format';
-import type { Profile, SessionInfo } from '@/lib/types';
+import type { Department, Profile, SessionInfo } from '@/lib/types';
 
 const AVATAR_MAX = 2 * 1024 * 1024;
 
@@ -58,7 +59,7 @@ function AvatarSection({ profile, onChanged }: { profile: Profile; onChanged: (v
           <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={upload} disabled={busy} aria-label="Upload photo" />
         </label>
         {profile.avatarVersion && (
-          <Button variant="ghost" onClick={remove} loading={busy}>
+          <Button icon={<Trash2 className="size-4" />} variant="ghost" onClick={remove} loading={busy}>
             <Trash2 className="size-4" /> Remove
           </Button>
         )}
@@ -72,15 +73,21 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
   const toast = useToast();
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [phone, setPhone] = useState(profile.phone ?? '');
+  const [departmentId, setDepartmentId] = useState(profile.department?.id ?? '');
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api<Department[]>('/departments').then(setDepartments).catch(() => undefined);
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError('');
     try {
-      const updated = await api<Profile>('/me/profile', { method: 'PATCH', body: { displayName, phone: phone.trim() || null } });
+      const updated = await api<Profile>('/me/profile', { method: 'PATCH', body: { displayName, phone: phone.trim() || null, departmentId: departmentId || null } });
       onSaved(updated);
       toast('Profile saved', 'success');
     } catch (err) {
@@ -111,11 +118,24 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
           <Label htmlFor="pf-phone">Phone (optional)</Label>
           <Input id="pf-phone" maxLength={20} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
+        <div>
+          <Label htmlFor="pf-dept">Department</Label>
+          <Select id="pf-dept" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+            <option value="">— Not set —</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+            {profile.department && !profile.department.isActive && <option value={profile.department.id}>{profile.department.name} (inactive)</option>}
+          </Select>
+          <p className="mt-1 text-xs text-fg-subtle">Choose the department you work in.</p>
+        </div>
         <div className="sm:col-span-2">
           <ErrorText>{error}</ErrorText>
         </div>
         <div className="sm:col-span-2 flex justify-end">
-          <Button type="submit" loading={busy}>
+          <Button icon={<Save className="size-4" />} type="submit" loading={busy}>
             Save
           </Button>
         </div>
@@ -125,7 +145,6 @@ function ProfileSection({ profile, onSaved }: { profile: Profile; onSaved: (p: P
         {managed('First name', profile.firstName)}
         {managed('Last name', profile.lastName)}
         {managed('Job title', profile.jobTitle)}
-        {managed('Department', profile.department?.name ?? null)}
         {managed('Employee ID', profile.employeeId)}
         {managed('Email', profile.email)}
         <p className="text-xs text-fg-subtle sm:col-span-2">Managed by your administrator.</p>
@@ -169,7 +188,7 @@ function SessionsSection() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold">Sessions</h2>
         {items && items.length > 1 && (
-          <Button size="sm" variant="secondary" onClick={signOutOthers}>
+          <Button icon={<LogOut className="size-4" />} size="sm" variant="secondary" onClick={signOutOthers}>
             Sign out all other devices
           </Button>
         )}
@@ -188,7 +207,7 @@ function SessionsSection() {
                 </p>
               </div>
               {!s.current && (
-                <Button size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
+                <Button icon={<LogOut className="size-4" />} size="sm" variant="ghost" onClick={() => signOut(s.publicId)}>
                   Sign out
                 </Button>
               )}
@@ -237,6 +256,20 @@ export default function ProfilePage() {
             />
           </Card>
           <SessionsSection />
+          <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
+            <div>
+              <h2 className="font-semibold">Your data</h2>
+              <p className="text-[13px] text-fg-subtle">Download a copy of what the system holds about you, or read the privacy notice again.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => downloadCsv('/me/data-export').catch((e) => toast(errorMessage(e), 'error'))} icon={<Download className="size-4" />}>
+                Download my data
+              </Button>
+              <Link href="/privacy-notice" className={buttonClass('secondary')}>
+                <FileText className="size-4" /> Privacy notice
+              </Link>
+            </div>
+          </Card>
         </div>
       )}
     </>

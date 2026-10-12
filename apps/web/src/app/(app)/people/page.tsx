@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/avatar';
 import { Button, Card, EmptyState, Input, Label, PageHeader, Select, Spinner } from '@/components/ui';
@@ -107,10 +107,10 @@ export default function PeoplePage() {
               {data.total} people · page {page} of {pages}
             </span>
             <div className="flex gap-2">
-              <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <Button icon={<ChevronLeft className="size-4" />} size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
                 Previous
               </Button>
-              <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+              <Button icon={<ChevronRight className="size-4" />} size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
                 Next
               </Button>
             </div>

@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnsupportedMediaTypeException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import sharp from 'sharp';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { StorageService } from '../recordings/storage.service';
 
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -42,6 +42,42 @@ export function sniffImageType(buf: Buffer): 'jpeg' | 'png' | 'webp' | null {
   return null;
 }
 
+/**
+ * Width and height from the file header, without decoding any pixels. Returns null for anything that is not a
+ * well-formed JPEG, PNG or WebP header. Used to refuse huge images before they are allocated.
+ */
+export function imageDimensions(buf: Buffer): { width: number; height: number } | null {
+  switch (sniffImageType(buf)) {
+    case 'png':
+      return buf.length >= 24 ? { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) } : null;
+    case 'jpeg': {
+      let offset = 2;
+      while (offset + 9 < buf.length) {
+        if (buf[offset] !== 0xff) return null;
+        const marker = buf[offset + 1];
+        if (marker === 0xff) { offset++; continue; } // fill byte
+        // Start-of-frame markers carry the size; C4, C8 and CC are not frames.
+        if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+          return { height: buf.readUInt16BE(offset + 5), width: buf.readUInt16BE(offset + 7) };
+        }
+        offset += 2 + buf.readUInt16BE(offset + 2);
+      }
+      return null;
+    }
+    case 'webp': {
+      const chunk = buf.subarray(12, 16).toString('ascii');
+      if (chunk === 'VP8 ' && buf.length >= 30) return { width: buf.readUInt16LE(26) & 0x3fff, height: buf.readUInt16LE(28) & 0x3fff };
+      if (chunk === 'VP8L' && buf.length >= 25) {
+        return { width: 1 + (((buf[22] & 0x3f) << 8) | buf[21]), height: 1 + (((buf[24] & 0x0f) << 10) | (buf[23] << 2) | ((buf[22] & 0xc0) >> 6)) };
+      }
+      if (chunk === 'VP8X' && buf.length >= 30) return { width: 1 + buf.readUIntLE(24, 3), height: 1 + buf.readUIntLE(27, 3) };
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 /** Avatars live under avatars/<userId>/ in the recordings bucket; objects are only ever written by the API. */
 export const avatarKeyFor = (userId: string) => `avatars/${userId}/${randomBytes(12).toString('hex')}.webp`;
 
@@ -52,19 +88,28 @@ export class AvatarService {
 
   constructor(private readonly storage: StorageService) {}
 
-  /** Crops to a square, scales to 256×256, re-encodes as WebP. The output has no EXIF/GPS metadata. */
+  /**
+   * Crops to a square, scales to 256×256, re-encodes as WebP. The picture is redrawn from decoded pixels, so no
+   * EXIF/GPS/XMP survives (only the standard colour profile the encoder adds). EXIF orientation is applied while decoding.
+   */
   async normalize(input: Buffer): Promise<Buffer> {
     if (!sniffImageType(input)) {
       throw new UnsupportedMediaTypeException('Avatar must be a JPG, PNG or WebP image.');
     }
+    const size = imageDimensions(input);
+    if (!size || size.width < 1 || size.height < 1 || size.width * size.height > MAX_INPUT_PIXELS) {
+      throw new UnsupportedMediaTypeException('Avatar could not be read as an image.');
+    }
     try {
-      return await this.decodes.run(() =>
-        sharp(input, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS, animated: false })
-          .rotate() // apply EXIF orientation before the metadata is dropped
-          .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
-          .webp()
-          .toBuffer(),
-      );
+      return await this.decodes.run(async () => {
+        const image = await loadImage(input);
+        const side = Math.min(image.width, image.height);
+        const canvas = createCanvas(AVATAR_SIZE, AVATAR_SIZE);
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+        return canvas.encode('webp', 90);
+      });
     } catch {
       throw new UnsupportedMediaTypeException('Avatar could not be read as an image.');
     }

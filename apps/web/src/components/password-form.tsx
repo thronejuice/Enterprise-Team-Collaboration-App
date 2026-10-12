@@ -1,4 +1,5 @@
 'use client';
+import { Check } from 'lucide-react';
 
 import { FormEvent, useState } from 'react';
 import { api, errorMessage } from '@/lib/api';
@@ -47,7 +48,7 @@ export function PasswordForm({ onChanged, submitLabel = 'Change password' }: { o
       <div className="sm:col-span-2">
         <ErrorText>{error}</ErrorText>
         <div className="mt-2 flex justify-end">
-          <Button type="submit" loading={busy}>
+          <Button type="submit" loading={busy} icon={<Check className="size-4" />}>
             {submitLabel}
           </Button>
         </div>

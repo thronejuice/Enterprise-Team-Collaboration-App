@@ -25,6 +25,9 @@ import { IsEmail, IsEnum, IsOptional, IsString, IsUUID, Matches, MaxLength, MinL
 import type { Response } from 'express';
 import type {} from 'multer'; // brings Express.Multer.File into scope
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { RateLimitService } from '../auth/rate-limit.service';
+import { LiveKitService } from '../livekit/livekit.service';
 import { Roles } from '../auth/auth.decorators';
 import { hashPassword, MIN_PASSWORD_LENGTH } from '../auth/passwords';
 import { SessionService } from '../auth/session.service';
@@ -228,6 +231,9 @@ export class UsersController {
     private readonly avatars: AvatarService,
     private readonly suspensions: SuspensionService,
     private readonly imports: ImportService,
+    private readonly notifications: NotificationsService,
+    private readonly rateLimit: RateLimitService,
+    private readonly livekit: LiveKitService,
   ) {}
 
   @Get()
@@ -285,6 +291,12 @@ export class UsersController {
         ]),
       );
     }
+    await this.notifications.notify(
+      await this.notifications.otherAdminIds(admin.id),
+      'admin.data_exported',
+      'User data exported',
+      `${admin.displayName} exported the user list.`,
+    );
     await this.audit.log({ action: 'users.exported', actorId: admin.id, ip, metadata: { filters: { q: query.q, role: query.role, status: query.status, departmentId: query.departmentId, sort: query.sort }, rows: rows.length } });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="users-${new Date().toISOString().slice(0, 10)}.csv"`);
@@ -310,6 +322,12 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async commitImport(@Body() dto: CommitImportDto, @CurrentUser() admin: AuthUser, @ClientIp() ip: string, @Res({ passthrough: true }) res: Response) {
     const csv = await this.imports.commit(admin.id, dto.importId, ip);
+    await this.notifications.notify(
+      await this.notifications.otherAdminIds(admin.id),
+      'admin.users_imported',
+      'Users imported',
+      `${admin.displayName} imported users from a CSV file.`,
+    );
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="temporary-passwords.csv"');
     res.setHeader('Cache-Control', 'no-store');
@@ -359,6 +377,8 @@ export class UsersController {
     return {
       ...profileView(user),
       status: accountStatus(user, user.suspensions.some((s) => s.status === 'SCHEDULED')),
+      /** Seconds the account is locked out of sign-in after too many wrong passwords (0 = not locked). */
+      loginLockedSeconds: await this.rateLimit.lockedSeconds([this.rateLimit.userLimit('login-email', user.email)]),
       currentSuspension: current,
       suspensionHistory: user.suspensions,
     };
@@ -415,6 +435,7 @@ export class UsersController {
         if (existing.role === 'ADMIN' && dto.role !== undefined && dto.role !== 'ADMIN') await assertAdminRemains(tx, id);
         return tx.user.update({ where: { id }, data, include: userInclude });
       });
+      if (existing.role === 'ADMIN' && dto.role !== undefined && dto.role !== 'ADMIN') await this.removeFromAdminOnlyRooms(id);
       if (fields.length > 0) {
         await this.audit.log({ action: 'user.updated', actorId: admin.id, targetType: 'user', targetId: id, ip, metadata: { fields, ...auditValues } });
       }
@@ -444,6 +465,16 @@ export class UsersController {
     await this.prisma.user.update({ where: { id }, data: { passwordHash: await hashPassword(dto.password), mustChangePassword: true } });
     await this.sessions.destroyAllForUser(id);
     await this.audit.log({ action: 'user.password_reset', actorId: admin.id, targetType: 'user', targetId: id, ip });
+  }
+
+  /** Clears a sign-in lockout caused by wrong passwords (anyone who knows an email can trigger one). */
+  @Post(':id/unlock-login')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unlockLogin(@CurrentUser() admin: AuthUser, @Param('id', ParseUUIDPipe) id: string, @ClientIp() ip: string) {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: { email: true } });
+    if (!user) throw new NotFoundException('User not found');
+    await this.rateLimit.unlock([this.rateLimit.userLimit('login-email', user.email)]);
+    await this.audit.log({ action: 'user.login_unlocked', actorId: admin.id, targetType: 'user', targetId: id, ip });
   }
 
   @Get(':id/offboarding-summary')
@@ -485,6 +516,7 @@ export class UsersController {
     const found = await this.sessions.destroyByPublicId(id, publicId);
     if (!found) throw new NotFoundException('Session not found');
     await this.audit.log({ action: 'auth.session_revoked', actorId: admin.id, targetType: 'user', targetId: id, ip, metadata: { publicId, scope: 'one' } });
+    await this.notifications.notify([id], 'session.revoked', 'A device was signed out', 'An administrator signed one of your devices out.');
   }
 
   @Post(':id/sessions/revoke-all')
@@ -492,6 +524,19 @@ export class UsersController {
   async revokeAllSessions(@CurrentUser() admin: AuthUser, @Param('id', ParseUUIDPipe) id: string, @ClientIp() ip: string) {
     await this.sessions.destroyAllForUser(id);
     await this.audit.log({ action: 'auth.session_revoked', actorId: admin.id, targetType: 'user', targetId: id, ip, metadata: { scope: 'all' } });
+    await this.notifications.notify([id], 'session.revoked', 'Signed out everywhere', 'An administrator signed out all of your devices.');
+  }
+
+  /**
+   * An admin may sit in any room without a room code. When one is demoted, disconnect them from the live rooms they
+   * could only be in because they were an admin (not host, not an admitted participant). Security review #9.
+   */
+  private async removeFromAdminOnlyRooms(userId: string): Promise<void> {
+    const rooms = await this.prisma.meeting.findMany({
+      where: { status: 'ACTIVE', hostId: { not: userId }, participants: { none: { userId, revokedAt: null } } },
+      select: { id: true },
+    });
+    for (const room of rooms) await this.livekit.removeParticipant(room.id, userId).catch(() => undefined);
   }
 
   private async assertDepartmentUsable(departmentId: string | null | undefined): Promise<void> {

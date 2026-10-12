@@ -7,6 +7,7 @@ export interface User {
   displayName: string;
   role: UserRole;
   mustChangePassword: boolean;
+  privacyNoticeAccepted: boolean;
   avatarVersion: number | null;
 }
 
@@ -77,6 +78,8 @@ export interface AdminUserRow {
 
 export interface AdminUserDetail extends Profile {
   status: AccountStatus;
+  /** Seconds left on a sign-in lockout from wrong passwords (0 = not locked). */
+  loginLockedSeconds: number;
   currentSuspension: Suspension | null;
   suspensionHistory: Suspension[];
 }

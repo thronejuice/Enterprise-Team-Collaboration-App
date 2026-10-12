@@ -40,7 +40,15 @@ Agreed before implementation (2026-10-11). Change here first if the scope change
 
 - **Client IPs behind Docker Desktop.** Every LAN client reaches Caddy from the Docker gateway address, so the per-IP
   limit is shared by all clients and the audit log shows the gateway IP. Per-user limits are unaffected.
-  Set `RATE_LIMIT_MAX_FAILURES_PER_IP=0` to disable the per-IP limit.
+  The per-IP limit is therefore **off by default** (`RATE_LIMIT_MAX_FAILURES_PER_IP=0`): left on, one person on the LAN
+  could lock every user out of login and room codes. Turn it on only where Caddy sees real client IPs
+  (Linux host, host networking, or WSL mirrored networking).
+- **Lockouts are short on purpose.** An email is public in the People directory, so a long per-user lockout would let
+  anyone lock an account. Defaults are 1, 2, then 5 minutes (`RATE_LIMIT_LOCKOUT_MINUTES`), and an administrator can
+  unlock an account from its user page. Security review #2 and #3.
+- **The one-computer rule is a policy, not a security control.** It is decided from the User-Agent and IP the client
+  sends, so someone who sets a phone User-Agent bypasses it. It stops accidental double sign-ins; it does not stop a
+  determined person. The refusal message does not say which device or IP holds the other session (security review #7).
 - **Automated tests use fake media.** The E2E test proves the shared screen is in the composite layout, not that real
   on-screen text is readable (REC-09); verify that manually on real devices.
 - **Not production.** Single node, no HA, no backups beyond Docker volumes (see [01-architecture.md](01-architecture.md) non-goals).

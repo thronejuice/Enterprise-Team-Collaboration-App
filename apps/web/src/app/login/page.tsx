@@ -1,6 +1,6 @@
 'use client';
 
-import { LockKeyhole } from 'lucide-react';
+import { LockKeyhole, LogIn } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { Logo } from '@/components/logo';
@@ -53,7 +53,7 @@ function LoginForm() {
         <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <Button type="submit" className="w-full" size="lg" loading={busy}>
+      <Button icon={<LogIn className="size-4" />} type="submit" className="w-full" size="lg" loading={busy}>
         Sign in
       </Button>
     </form>

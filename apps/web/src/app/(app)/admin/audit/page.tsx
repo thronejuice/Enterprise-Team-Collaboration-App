@@ -1,8 +1,11 @@
 'use client';
 
+import { Filter, History } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Card, cx, ErrorText, Input, Label, PageHeader, Pill, Spinner } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
 import type { AuditItem } from '@/lib/types';
 
@@ -11,6 +14,9 @@ const PREFIXES = ['', 'auth.', 'user.', 'users.', 'profile.', 'department.', 'me
 const SENSITIVE = new Set(['user.suspended', 'user.suspension_blocked', 'user.anonymized', 'user.reactivated', 'user.suspension_cancelled', 'users.exported', 'auth.session_revoked']);
 
 export default function AuditPage() {
+  const { user: me } = useAuth();
+  const router = useRouter();
+  const isAdmin = me?.role === 'ADMIN';
   const [items, setItems] = useState<AuditItem[]>([]);
   const [next, setNext] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,9 +45,13 @@ export default function AuditPage() {
     [action, failedOnly],
   );
 
+  // Same guard as the other admin pages: non-admins are sent home instead of seeing a page that can only fail.
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (me && !isAdmin) router.replace('/');
+    else if (isAdmin) void load();
+  }, [me, isAdmin, load, router]);
+
+  if (!isAdmin) return null;
 
   return (
     <>
@@ -51,7 +61,7 @@ export default function AuditPage() {
           <Label>Category</Label>
           <div className="flex gap-1">
             {PREFIXES.map((p) => (
-              <Button key={p || 'all'} size="sm" variant={action === p ? 'primary' : 'secondary'} onClick={() => setAction(p)}>
+              <Button key={p || 'all'} size="sm" variant={action === p ? 'primary' : 'secondary'} onClick={() => setAction(p)} icon={<Filter className="size-4" />}>
                 {p ? p.replace('.', '') : 'all'}
               </Button>
             ))}
@@ -102,7 +112,7 @@ export default function AuditPage() {
       </Card>
       {next && !loading && (
         <div className="mt-4 flex justify-center">
-          <Button variant="secondary" onClick={() => void load(next)}>
+          <Button icon={<History className="size-4" />} variant="secondary" onClick={() => void load(next)}>
             Load older events
           </Button>
         </div>

@@ -14,24 +14,7 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { ConnectionState, DisconnectReason, Participant, RoomOptions, ScreenSharePresets, Track, VideoPresets } from 'livekit-client';
-import {
-  Camera,
-  CameraOff,
-  Circle,
-  Copy,
-  Loader2,
-  Mic,
-  MicOff,
-  MonitorUp,
-  MonitorX,
-  PhoneOff,
-  Square,
-  UserMinus,
-  Users,
-  VolumeX,
-  WifiOff,
-  X,
-} from 'lucide-react';
+import { Camera, CameraOff, Circle, Copy, Loader2, Mic, MicOff, MonitorUp, MonitorX, PhoneOff, Square, UserMinus, Users, VolumeX, WifiOff, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from '@/components/modal';
 import { useToast } from '@/components/toast';
@@ -124,6 +107,9 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
   }, [isRecording, toast]);
 
   useDataChannel('moderation', (msg) => {
+    // Only the server (RoomService.SendData) may send moderation messages, and those have no sender.
+    // Any participant can publish data on this topic, so a message with a sender is a forgery.
+    if (msg.from) return;
     try {
       const payload = JSON.parse(new TextDecoder().decode(msg.payload)) as { type?: string; by?: string };
       if (payload.type === 'muted_by_host') toast(`${payload.by ?? 'The host'} muted your microphone.`, 'info');
@@ -291,7 +277,7 @@ function ControlBar({
           <PhoneOff className="size-4" /> Leave
         </Button>
         {isHost && (
-          <Button variant="danger" onClick={() => setConfirmEnd(true)}>
+          <Button icon={<PhoneOff className="size-4" />} variant="danger" onClick={() => setConfirmEnd(true)}>
             End meeting
           </Button>
         )}
@@ -302,10 +288,10 @@ function ControlBar({
         title="End meeting for everyone?"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setConfirmEnd(false)}>
+            <Button icon={<X className="size-4" />} variant="secondary" onClick={() => setConfirmEnd(false)}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={endMeeting} loading={ending}>
+            <Button icon={<PhoneOff className="size-4" />} variant="danger" onClick={endMeeting} loading={ending}>
               End meeting
             </Button>
           </>
@@ -472,10 +458,10 @@ function ParticipantsPanel({ meeting, isHost, participants, onClose }: { meeting
         title={`Remove ${removing?.name ?? ''}?`}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setRemoving(null)}>
+            <Button icon={<X className="size-4" />} variant="secondary" onClick={() => setRemoving(null)}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={remove} loading={busy}>
+            <Button icon={<UserMinus className="size-4" />} variant="danger" onClick={remove} loading={busy}>
               Remove
             </Button>
           </>

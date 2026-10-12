@@ -16,10 +16,19 @@ const users = {
 } as const;
 
 async function apiAs(email: string, password: string): Promise<APIRequestContext> {
-  const ctx = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE } });
+  // API clients identify as a phone so they never count as a computer under the one-computer rule.
+  const ctx = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE, 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' } });
   const res = await ctx.post('/api/auth/login', { data: { email, password } });
   expect(res.status(), `login ${email}`).toBe(200);
   return ctx;
+}
+
+/** Clears the admin's sessions left by earlier runs, so this run's browser logins are not refused as a second computer. */
+async function resetAdminSessions() {
+  const api = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
+  const me = (await (await api.get('/api/auth/me')).json()) as { user: { id: string } };
+  expect((await api.post(`/api/admin/users/${me.user.id}/sessions/revoke-all`)).status()).toBe(204);
+  await api.dispose();
 }
 
 /** The one forced password change a new account makes before it can use the app. */
@@ -27,6 +36,8 @@ async function completeFirstSignIn(email: string) {
   const ctx = await apiAs(email, TEMP_PASSWORD);
   const res = await ctx.post('/api/auth/password', { data: { currentPassword: TEMP_PASSWORD, newPassword: PASSWORD } });
   expect(res.status(), `first password change ${email}`).toBe(204);
+  const accepted = await ctx.post('/api/auth/privacy-notice');
+  expect(accepted.status(), `privacy notice ${email}`).toBe(201);
   await ctx.dispose();
 }
 
@@ -56,6 +67,7 @@ async function joinFromPrejoin(page: Page) {
 }
 
 test('meeting, screen share, recording and access control end to end', async ({ browser }) => {
+  await resetAdminSessions();
   // --- Admin creates accounts (one through the UI) ---------------------------------------
   const admin = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
   for (const key of ['member', 'outsider'] as const) {
@@ -63,6 +75,10 @@ test('meeting, screen share, recording and access control end to end', async ({ 
     expect(res.status()).toBe(201);
     await completeFirstSignIn(users[key].email);
   }
+  // The seeded admin accepts the privacy notice once before the UI is used.
+  const adminAccepts = await apiAs(ADMIN_EMAIL, ADMIN_PASSWORD);
+  await adminAccepts.post('/api/auth/privacy-notice');
+  await adminAccepts.dispose();
   const adminUi = await browser.newContext();
   const adminPage = await adminUi.newPage();
   await adminPage.goto('/login');

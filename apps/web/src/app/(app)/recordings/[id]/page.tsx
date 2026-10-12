@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, CircleAlert, Download, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, CircleAlert, Download, Loader2, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -110,7 +110,7 @@ export default function RecordingPage() {
                 </a>
               )}
               {rec.canManage && !isInFlight(rec.status) && (
-                <Button variant="ghost" className="w-full text-danger hover:text-danger" onClick={() => setConfirmDelete(true)}>
+                <Button icon={<Trash2 className="size-4" />} variant="ghost" className="w-full text-danger hover:text-danger" onClick={() => setConfirmDelete(true)}>
                   <Trash2 className="size-4" /> Delete recording
                 </Button>
               )}
@@ -124,10 +124,10 @@ export default function RecordingPage() {
         title="Delete this recording?"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+            <Button icon={<X className="size-4" />} variant="secondary" onClick={() => setConfirmDelete(false)}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={remove} loading={deleting}>
+            <Button icon={<Trash2 className="size-4" />} variant="danger" onClick={remove} loading={deleting}>
               Delete permanently
             </Button>
           </>

@@ -156,7 +156,7 @@ export default function ImportUsersPage() {
               </div>
               {preview.errorCount > 0 && <p className="mt-3 text-[13px] text-danger">Fix the highlighted rows and upload the file again. Import stays disabled until every row is valid.</p>}
               <div className="mt-4 flex justify-end">
-                <Button onClick={commit} disabled={preview.errorCount > 0 || preview.total === 0} loading={busy}>
+                <Button icon={<Upload className="size-4" />} onClick={commit} disabled={preview.errorCount > 0 || preview.total === 0} loading={busy}>
                   Import {preview.validCount} users
                 </Button>
               </div>

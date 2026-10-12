@@ -77,6 +77,8 @@ model User {
   mustChangePassword Boolean   @default(false) @map("must_change_password")
   lastLoginAt        DateTime? @map("last_login_at")
   anonymizedAt       DateTime? @map("anonymized_at")
+  /// Version of the privacy notice the user accepted. Must equal the current version to use the app.
+  privacyNoticeVersion String? @map("privacy_notice_version")
 
   meetingsCreated Meeting[]            @relation("MeetingCreator")
   meetingsHosted  Meeting[]            @relation("MeetingHost")
@@ -84,6 +86,7 @@ model User {
   recordings      Recording[]          @relation("RecordingRequester")
   department      Department?          @relation(fields: [departmentId], references: [id])
   suspensions     UserSuspension[]     @relation("SuspendedUser")
+  notifications   Notification[]
 
   @@index([departmentId])
   @@map("users")
@@ -193,4 +196,19 @@ model UserSuspension {
   @@index([status, effectiveAt])
   @@index([userId])
   @@map("user_suspensions")
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  kind      String
+  title     String
+  body      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@map("notifications")
 }

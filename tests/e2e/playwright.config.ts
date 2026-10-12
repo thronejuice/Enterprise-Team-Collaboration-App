@@ -11,6 +11,8 @@ export const WHATS_NEW_SEEN = { name: 'nexus:whats-new-seen', value: appVersion 
 
 export default defineConfig({
   testDir: '.',
+  // Manual screenshots need a demo database and have their own config (playwright.manual.config.ts).
+  testIgnore: 'manual-screenshots.spec.ts',
   timeout: 300_000,
   expect: { timeout: 30_000 },
   fullyParallel: false,
