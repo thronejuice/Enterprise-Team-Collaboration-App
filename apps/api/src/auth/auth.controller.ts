@@ -25,7 +25,7 @@ import { AllowMustChangePassword, Public } from './auth.decorators';
 import { SESSION_COOKIE } from './auth.guard';
 import { dummyVerify, hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from './passwords';
 import { RateLimitService, TooManyAttemptsException } from './rate-limit.service';
-import { SessionService } from './session.service';
+import { deviceKey, isDesktop, SessionService } from './session.service';
 
 class LoginDto {
   @IsEmail()
@@ -119,9 +119,23 @@ export class AuthController {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.rateLimit.recordSuccess([limits[0]]);
     const userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined;
-    const token = await this.sessions.create(user.id, { ip: clientIp(req), userAgent });
+    // One computer at a time: a PC/notebook is refused while another computer is signed in. Phones and tablets are not limited.
+    // The password was right, so this does not count as a failed attempt.
+    if (isDesktop(userAgent)) {
+      const key = deviceKey(ip, userAgent);
+      const other = (await this.sessions.desktopSessions(user.id)).find((d) => d.key !== key);
+      if (other) {
+        await this.audit.log({ action: 'auth.login_failed', actorId: user.id, ip: ip, success: false, metadata: { email, reason: 'device_limit' } });
+        throw coded(
+          HttpStatus.CONFLICT,
+          'DEVICE_LIMIT',
+          `You are already signed in on ${other.label}${other.ip ? ` (${other.ip})` : ''}. Sign out there first, then try again.`,
+        );
+      }
+    }
+    await this.rateLimit.recordSuccess([limits[0]]);
+    const token = await this.sessions.create(user.id, { ip: ip, userAgent });
     const updated = await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,

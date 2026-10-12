@@ -15,7 +15,8 @@ export type ErrorCode =
   | 'EMPLOYEE_ID_TAKEN'
   | 'EMAIL_TAKEN'
   | 'DEPARTMENT_NAME_TAKEN'
-  | 'PASSWORD_UNCHANGED';
+  | 'PASSWORD_UNCHANGED'
+  | 'DEVICE_LIMIT';
 
 export function coded(status: HttpStatus, code: ErrorCode, message: string): HttpException {
   return new HttpException({ statusCode: status, message, code }, status);

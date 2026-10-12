@@ -34,6 +34,18 @@ const newPublicId = () => randomBytes(16).toString('base64url');
 /** lastSeenAt is written at most once per minute per session. */
 const LAST_SEEN_RESOLUTION_MS = 60_000;
 
+/** Phones and tablets are never limited; a session without a User-Agent counts as a computer. */
+export function isDesktop(userAgent?: string): boolean {
+  if (!userAgent) return true;
+  const type = new UAParser(userAgent).getDevice().type;
+  return type !== 'mobile' && type !== 'tablet';
+}
+
+/** One computer = same IP and same operating system. Two browsers on one machine share a key. */
+export function deviceKey(ip: string | undefined, userAgent?: string): string {
+  return `${ip ?? ''}|${new UAParser(userAgent ?? '').getOS().name ?? ''}`;
+}
+
 /** "Chrome on Windows", "Safari on iOS", or "Unknown device" when there is nothing to parse. */
 export function deviceLabel(userAgent?: string): string {
   if (!userAgent) return 'Unknown device';
@@ -134,6 +146,20 @@ export class SessionService {
       });
     }
     return items.sort((a, b) => (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? ''));
+  }
+
+  /** Live computer (non-mobile) sessions of a user, for the one-computer-at-a-time rule. */
+  async desktopSessions(userId: string): Promise<{ key: string; label: string; ip?: string }[]> {
+    const ids = await this.redis.client.smembers(`user-sess:${userId}`);
+    const found: { key: string; label: string; ip?: string }[] = [];
+    for (const id of ids) {
+      const raw = await this.redis.client.get(`sess:${id}`);
+      if (!raw) continue;
+      const data = JSON.parse(raw) as SessionData;
+      if (!isDesktop(data.userAgent)) continue;
+      found.push({ key: deviceKey(data.ip, data.userAgent), label: deviceLabel(data.userAgent), ip: data.ip });
+    }
+    return found;
   }
 
   /** Signs out one session by its public id. Returns false if the user has no such live session. */
