@@ -22,7 +22,7 @@ const person = (tag: string, role: 'HOST' | 'MEMBER' | 'ADMIN' = 'MEMBER') => ({
   email: `${tag}-${RUN}@demo.test`,
   displayName: `${tag[0].toUpperCase()}${tag.slice(1)} ${RUN}`,
   role,
-  employeeId: `E2E${RUN}${tag[0].toUpperCase()}`.toUpperCase(),
+  employeeId: `E2E${RUN}${tag}`.toUpperCase(),
 });
 
 async function apiAs(email: string, password: string): Promise<APIRequestContext> {
@@ -58,8 +58,8 @@ async function uiLogin(browser: Browser, email: string, password = PASSWORD): Pr
   return { ctx, page };
 }
 
-async function signedInHome(browser: Browser, email: string) {
-  const session = await uiLogin(browser, email);
+async function signedInHome(browser: Browser, email: string, password = PASSWORD) {
+  const session = await uiLogin(browser, email, password);
   await expect(session.page.getByRole('heading', { name: /Welcome/ })).toBeVisible();
   return session;
 }
@@ -145,14 +145,15 @@ test.describe.serial('profile, directory and offboarding', () => {
     const memberSession = await signedInHome(browser, mika.email);
     await memberSession.page.request.post('/api/meetings/join', { data: { roomCode: meeting.roomCode } });
 
-    const adminUi = await signedInHome(browser, ADMIN_EMAIL);
+    const adminUi = await signedInHome(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
     await adminUi.page.getByRole('link', { name: 'Users' }).click();
     await adminUi.page.getByLabel('Search').fill(hana.email);
     await adminUi.page.getByRole('link', { name: hana.displayName }).click();
     await adminUi.page.getByRole('button', { name: 'Suspend…' }).click();
     const dialog = adminUi.page.getByRole('dialog');
-    await dialog.getByLabel('Hand over rooms and recordings to (optional)').fill(mika.displayName);
-    await dialog.getByRole('button', { name: mika.displayName }).click();
+    // Scenario 2 renamed Mika, so search for the current name.
+    await dialog.getByLabel('Hand over rooms and recordings to (optional)').fill(`Mika Renamed ${RUN}`);
+    await dialog.getByRole('button', { name: `Mika Renamed ${RUN}` }).click();
     await dialog.getByRole('checkbox').check();
     await dialog.getByRole('button', { name: 'Suspend now' }).click();
     await expect(adminUi.page.getByText(/was suspended and disconnected/)).toBeVisible();
@@ -214,7 +215,7 @@ test.describe.serial('profile, directory and offboarding', () => {
     writeFileSync(badPath, csv([ok1, ok2, bad]));
     writeFileSync(goodPath, csv([ok1, ok2]));
 
-    const adminUi = await signedInHome(browser, ADMIN_EMAIL);
+    const adminUi = await signedInHome(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
     await adminUi.page.goto('/admin/users/import');
     await adminUi.page.getByLabel('CSV file').setInputFiles(badPath);
     await adminUi.page.getByRole('button', { name: 'Preview' }).click();
@@ -240,11 +241,20 @@ test.describe.serial('profile, directory and offboarding', () => {
 
   // E2E 8 — sign out another device from /profile; that device is sent to /login.
   test('8. signing out another device from My profile sends it to login', async ({ browser }) => {
-    const device = await signedInHome(browser, otto.email);
-    const mine = await signedInHome(browser, otto.email);
+    // A dedicated user, so the only sessions are the two this test opens.
+    const nina = person('nina');
+    await createUser(admin, nina);
+    // First-sign-in left one API session open; drop it so only this test's sessions remain.
+    const keeper = await apiAs(nina.email, PASSWORD);
+    expect((await keeper.post('/api/auth/sessions/revoke-others')).status()).toBe(204);
+    expect((await keeper.post('/api/auth/logout')).status()).toBe(204);
+    await keeper.dispose();
+    const device = await signedInHome(browser, nina.email);
+    const mine = await signedInHome(browser, nina.email);
     await mine.page.goto('/profile');
     await expect(mine.page.getByText('This device')).toBeVisible();
-    await mine.page.getByRole('button', { name: 'Sign out', exact: true }).first().click();
+    // Only the other device has a Sign out button inside <main>; this device is marked "This device".
+    await mine.page.getByRole('main').getByRole('button', { name: 'Sign out', exact: true }).click();
     await device.page.reload();
     await expect(device.page).toHaveURL(/\/login/);
     await device.ctx.close();

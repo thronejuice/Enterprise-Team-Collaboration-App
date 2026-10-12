@@ -79,6 +79,9 @@ test('meeting, screen share, recording and access control end to end', async ({ 
   await dialog.getByLabel('Employee ID').fill(users.host.employeeId);
   await dialog.getByLabel(/Initial password/).fill(TEMP_PASSWORD);
   await dialog.getByRole('button', { name: 'Create user' }).click();
+  await expect(dialog).toBeHidden();
+  // The users list is paged and oldest-first, so find the new account by search.
+  await adminPage.getByLabel('Search').fill(users.host.email);
   await expect(adminPage.getByText(users.host.email, { exact: true })).toBeVisible();
   await completeFirstSignIn(users.host.email);
   await adminUi.close();

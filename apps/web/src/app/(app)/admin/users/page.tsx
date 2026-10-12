@@ -3,7 +3,7 @@
 import { Download, Plus, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, Suspense, useCallback, useEffect, useState } from 'react';
+import { FormEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/avatar';
 import { Modal } from '@/components/modal';
 import { useToast } from '@/components/toast';
@@ -202,11 +202,18 @@ function UsersList() {
   query.set('sort', sort);
   query.set('page', String(page));
 
+  // Only the newest request may update the table, so a slow earlier response cannot overwrite newer results.
+  const latestRequest = useRef(0);
   const load = useCallback(() => {
+    const id = ++latestRequest.current;
     setError('');
     api<Paged<AdminUserRow>>(`/admin/users?${query.toString()}`)
-      .then(setData)
-      .catch((e) => setError(errorMessage(e)));
+      .then((page) => {
+        if (id === latestRequest.current) setData(page);
+      })
+      .catch((e) => {
+        if (id === latestRequest.current) setError(errorMessage(e));
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.toString()]);
 
