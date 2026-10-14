@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={cx(
               'flex h-11 items-center gap-3 rounded-md transition-colors',
               open ? 'px-3' : 'w-11 justify-center',
-              isActive(href) ? 'bg-primary text-white' : 'text-fg-subtle hover:bg-surface hover:text-fg',
+              isActive(href) ? 'bg-primary-hover text-white' : 'text-fg-subtle hover:bg-surface hover:text-fg',
             )}
           >
             <Icon className="size-5 shrink-0" />

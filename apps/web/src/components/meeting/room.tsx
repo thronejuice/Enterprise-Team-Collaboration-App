@@ -79,14 +79,19 @@ export function MeetingRoom({ meeting, token, serverUrl, isHost, choices, onLeft
   );
 }
 
-function useElapsed(): string {
+/** Ticks on its own so the video grid is not re-rendered every second. Counts from when this user joined. */
+function Elapsed() {
   const start = useRef(Date.now());
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  return formatDuration(now - start.current);
+  return (
+    <span className="tnum" title="Time since you joined">
+      {formatDuration(now - start.current)}
+    </span>
+  );
 }
 
 function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean }) {
@@ -95,7 +100,6 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
   const connection = useConnectionState();
   const isRecording = useIsRecording();
   const participants = useParticipants();
-  const elapsed = useElapsed();
   const [panelOpen, setPanelOpen] = useState(false);
   const firstRecordingState = useRef(true);
 
@@ -151,7 +155,7 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
           </Pill>
         )}
         <div className="ml-auto flex items-center gap-3 text-[13px] text-fg-subtle">
-          <span className="tnum">{elapsed}</span>
+          <Elapsed />
           <span className="tnum flex items-center gap-1" title={`${participants.length} of ${meeting.maxParticipants} participants`}>
             <Users className="size-4" aria-hidden /> {participants.length}/{meeting.maxParticipants}
           </span>
@@ -191,7 +195,7 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
         {panelOpen && <ParticipantsPanel meeting={meeting} isHost={isHost} participants={participants} onClose={() => setPanelOpen(false)} />}
       </div>
 
-      <StartAudio label="Your browser paused meeting audio. Click to hear the meeting." className="fixed top-20 left-1/2 z-50 -translate-x-1/2 rounded bg-primary px-4 py-2 font-medium text-white shadow-float" />
+      <StartAudio label="Your browser paused meeting audio. Click to hear the meeting." className="fixed top-20 left-1/2 z-50 -translate-x-1/2 rounded bg-primary-hover px-4 py-2 font-medium text-white shadow-float" />
 
       <ControlBar meeting={meeting} isHost={isHost} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen((v) => !v)} onLeave={() => void room.disconnect()} />
     </>
@@ -222,7 +226,7 @@ function RoundButton({
       aria-pressed={active}
       className={cx(
         'grid size-11 place-items-center rounded-full transition-colors disabled:opacity-50',
-        danger ? 'bg-danger text-white hover:bg-danger-hover' : active ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-surface-3 text-fg hover:bg-line-strong',
+        danger ? 'bg-danger-hover text-white hover:bg-danger-press' : active ? 'bg-primary-hover text-white hover:bg-primary-press' : 'bg-surface-3 text-fg hover:bg-line-strong',
       )}
     >
       {children}
@@ -382,7 +386,7 @@ function RecordButton({ meetingId }: { meetingId: string }) {
   }
   if (status === 'REQUESTED' || status === 'STARTING' || status === 'RECORDING') {
     return (
-      <button onClick={stop} disabled={busy} className="flex h-11 items-center gap-2 rounded-full border border-danger bg-danger/15 px-4 text-[13px] font-semibold text-danger hover:bg-danger/25" aria-label="Stop recording">
+      <button onClick={stop} disabled={busy} className="flex h-11 items-center gap-2 rounded-full border border-danger bg-danger/15 px-4 text-[13px] font-semibold text-red-300 hover:bg-danger/25" aria-label="Stop recording">
         {status === 'RECORDING' ? <Square className="size-3.5 fill-current" /> : <Loader2 className="size-4 animate-spin" />}
         {status === 'RECORDING' ? 'Stop recording' : 'Starting…'}
       </button>
@@ -443,8 +447,10 @@ function ParticipantsPanel({ meeting, isHost, participants, onClose }: { meeting
               </p>
               {isHostParticipant(p) && <p className="text-[11px] font-semibold tracking-[0.03em] text-primary-soft uppercase">Host</p>}
             </div>
-            {p.isMicrophoneEnabled ? <Mic className="size-4 text-fg-subtle" /> : <MicOff className="size-4 text-danger" />}
-            {p.isCameraEnabled ? <Camera className="size-4 text-fg-subtle" /> : <CameraOff className="size-4 text-fg-subtle" />}
+            {p.isMicrophoneEnabled ? <Mic className="size-4 text-fg-subtle" aria-hidden /> : <MicOff className="size-4 text-danger" aria-hidden />}
+            <span className="sr-only">{p.isMicrophoneEnabled ? 'microphone on' : 'muted'}</span>
+            {p.isCameraEnabled ? <Camera className="size-4 text-fg-subtle" aria-hidden /> : <CameraOff className="size-4 text-fg-subtle" aria-hidden />}
+            <span className="sr-only">{p.isCameraEnabled ? 'camera on' : 'camera off'}</span>
             {isHost && !p.isLocal && (
               <div className="flex gap-1">
                 <button

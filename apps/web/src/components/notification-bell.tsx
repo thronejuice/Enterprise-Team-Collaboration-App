@@ -19,6 +19,7 @@ export function NotificationBell({ collapsed }: { collapsed: boolean }) {
   const [data, setData] = useState<{ unread: number; items: Item[] }>({ unread: 0, items: [] });
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(() => {
     api<{ unread: number; items: Item[] }>('/notifications')
@@ -52,8 +53,21 @@ export function NotificationBell({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div
+      ref={ref}
+      className="relative"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          setOpen(false);
+          buttonRef.current?.focus();
+        }
+      }}
+      onBlur={(e) => {
+        if (open && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
       <button
+        ref={buttonRef}
         onClick={toggle}
         aria-label={data.unread ? `Notifications, ${data.unread} unread` : 'Notifications'}
         aria-expanded={open}
@@ -62,13 +76,13 @@ export function NotificationBell({ collapsed }: { collapsed: boolean }) {
       >
         <Bell className="size-5" />
         {data.unread > 0 && (
-          <span className="absolute top-1.5 right-1.5 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] leading-4 font-semibold text-white">
+          <span className="absolute top-1.5 right-1.5 grid min-w-4 place-items-center rounded-full bg-danger-hover px-1 text-[10px] leading-4 font-semibold text-white">
             {data.unread > 9 ? '9+' : data.unread}
           </span>
         )}
       </button>
       {open && (
-        <div role="dialog" aria-label="Notifications" className="glass absolute bottom-12 left-0 z-50 w-80 rounded-lg border border-line p-3 shadow-float">
+        <div role="dialog" aria-label="Notifications" className="absolute bottom-12 left-0 z-50 w-80 rounded-lg border border-line bg-surface-3 p-3 shadow-float">
           <p className="mb-2 font-semibold">Notifications</p>
           {data.items.length === 0 && <p className="text-[13px] text-fg-subtle">Nothing yet.</p>}
           <ul className="max-h-96 space-y-2 overflow-y-auto">

@@ -62,6 +62,16 @@ function useAudioLevel(track: LocalAudioTrack | null) {
   return level;
 }
 
+/** Own component so the per-frame level updates re-render only the bar, not the whole pre-join page. */
+function MicLevelMeter({ track }: { track: LocalAudioTrack | null }) {
+  const level = useAudioLevel(track);
+  return (
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-canvas" role="meter" aria-label="Microphone level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level * 100)}>
+      <div className="h-full rounded-full bg-cyan transition-[width] duration-75" style={{ width: `${Math.round(level * 100)}%` }} />
+    </div>
+  );
+}
+
 function permissionMessage(error: unknown, what: string): string {
   const name = (error as { name?: string })?.name;
   const device = what.toLowerCase();
@@ -83,7 +93,6 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
   const videoEl = useRef<HTMLVideoElement>(null);
   const cameras = useDevices('videoinput', videoTrack);
   const mics = useDevices('audioinput', audioTrack);
-  const level = useAudioLevel(audioTrack);
 
   useEffect(() => {
     if (!videoEnabled) return;
@@ -164,7 +173,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
               onClick={() => setAudioEnabled((v) => !v)}
               aria-pressed={audioEnabled}
               aria-label={audioEnabled ? 'Mute microphone' : 'Unmute microphone'}
-              className={cx('grid size-11 place-items-center rounded-full', audioEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger text-white')}
+              className={cx('grid size-11 place-items-center rounded-full', audioEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger-hover text-white')}
             >
               {audioEnabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
             </button>
@@ -172,7 +181,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
               onClick={() => setVideoEnabled((v) => !v)}
               aria-pressed={videoEnabled}
               aria-label={videoEnabled ? 'Turn camera off' : 'Turn camera on'}
-              className={cx('grid size-11 place-items-center rounded-full', videoEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger text-white')}
+              className={cx('grid size-11 place-items-center rounded-full', videoEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger-hover text-white')}
             >
               {videoEnabled ? <Camera className="size-5" /> : <CameraOff className="size-5" />}
             </button>
@@ -215,16 +224,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
                 </option>
               ))}
             </Select>
-            <div
-              className="mt-2 h-1.5 overflow-hidden rounded-full bg-canvas"
-              role="meter"
-              aria-label="Microphone level"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(level * 100)}
-            >
-              <div className="h-full rounded-full bg-cyan transition-[width] duration-75" style={{ width: `${Math.round(level * 100)}%` }} />
-            </div>
+            <MicLevelMeter track={audioTrack} />
           </div>
         </div>
 

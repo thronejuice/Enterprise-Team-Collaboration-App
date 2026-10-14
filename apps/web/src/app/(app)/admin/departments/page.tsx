@@ -115,6 +115,7 @@ export default function DepartmentsPage() {
         )}
         {items && items.length === 0 && <EmptyState icon={<Plus className="size-8" />} title="No departments yet">Add the first one to use it on user profiles.</EmptyState>}
         {items && items.length > 0 && (
+          <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="border-b border-line/60 text-xs tracking-[0.015em] text-fg-subtle uppercase">
               <tr>
@@ -150,6 +151,7 @@ export default function DepartmentsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
       <NameModal open={editing !== null} department={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={load} />

@@ -1,7 +1,7 @@
 'use client';
 
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
-import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useRef, useState } from 'react';
 import { cx } from './ui';
 
 type Tone = 'info' | 'success' | 'error' | 'recording';
@@ -15,12 +15,22 @@ const ToastContext = createContext<(message: string, tone?: Tone) => void>(() =>
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const dismiss = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  const dismiss = useCallback((id: number) => {
+    clearTimeout(timers.current.get(id));
+    timers.current.delete(id);
+    setToasts((t) => t.filter((x) => x.id !== id));
+  }, []);
+  const hold = (id: number) => clearTimeout(timers.current.get(id));
+  const resume = (id: number, tone: Tone) => {
+    if (tone !== 'error') timers.current.set(id, setTimeout(() => dismiss(id), 5000));
+  };
   const push = useCallback(
     (message: string, tone: Tone = 'info') => {
       const id = Date.now() + Math.random();
       setToasts((t) => [...t.slice(-3), { id, tone, message }]);
-      setTimeout(() => dismiss(id), tone === 'error' ? 8000 : 5000);
+      // Errors stay until dismissed (WCAG 2.2.1); others time out unless hovered or focused.
+      if (tone !== 'error') timers.current.set(id, setTimeout(() => dismiss(id), 5000));
     },
     [dismiss],
   );
@@ -32,6 +42,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
+            role={t.tone === 'error' ? 'alert' : undefined}
+            onMouseEnter={() => hold(t.id)}
+            onMouseLeave={() => resume(t.id, t.tone)}
+            onFocus={() => hold(t.id)}
+            onBlur={() => resume(t.id, t.tone)}
             className={cx(
               'pointer-events-auto flex items-start gap-3 rounded-md border bg-surface-3 px-3.5 py-3 shadow-float',
               t.tone === 'error' && 'border-danger/60',

@@ -51,7 +51,7 @@ export function RoomCodeInput({ value, onChange, disabled }: { value: string; on
           onKeyDown={(e) => onKeyDown(i, e)}
           onPaste={onPaste}
           onFocus={(e) => e.target.select()}
-          className="tnum h-14 w-12 rounded-md border border-line bg-canvas text-center text-2xl font-semibold focus:border-primary focus:outline-none disabled:opacity-50"
+          className="tnum h-14 w-12 rounded-md border border-field bg-canvas text-center text-2xl font-semibold focus:border-primary focus:outline-none disabled:opacity-50"
         />
       ))}
     </div>
