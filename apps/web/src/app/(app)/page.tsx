@@ -36,15 +36,15 @@ function JoinCard() {
   }
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-center gap-2">
+    <Card className="px-6 py-10">
+      <div className="mb-6 flex items-center justify-center gap-2">
         <DoorOpen className="size-5 text-cyan" />
-        <h2 className="text-base leading-6 font-semibold">Join with a room code</h2>
+        <h2 className="text-xl leading-7 font-semibold tracking-[-0.015em]">Join with a room code</h2>
       </div>
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="flex flex-col items-center space-y-4">
         <RoomCodeInput value={code} onChange={setCode} disabled={busy} />
         <ErrorText>{error}</ErrorText>
-        <Button icon={<ArrowRight className="size-4" />} type="submit" loading={busy} disabled={code.length !== 4}>
+        <Button icon={<ArrowRight className="size-4" />} type="submit" size="lg" loading={busy} disabled={code.length !== 4}>
           Continue
         </Button>
       </form>
@@ -105,21 +105,17 @@ function CreateCard({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <Plus className="size-5 text-primary-soft" />
-        <h2 className="text-base leading-6 font-semibold">Start a new meeting</h2>
-      </div>
-      <form onSubmit={submit} className="space-y-4">
-        <div>
+    <Card className="px-5 py-4">
+      <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
+        <div className="min-w-48 flex-1">
           <Label htmlFor="title">Meeting title</Label>
-          <Input id="title" required maxLength={120} placeholder="e.g. Sprint review" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input id="title" required maxLength={120} placeholder="Start a new meeting, e.g. Sprint review" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
-        <ErrorText>{error}</ErrorText>
-        <Button icon={<Plus className="size-4" />} type="submit" loading={busy} disabled={!title.trim()}>
+        <Button icon={<Plus className="size-4" />} type="submit" variant="secondary" loading={busy} disabled={!title.trim()}>
           Create meeting
         </Button>
       </form>
+      <ErrorText>{error}</ErrorText>
     </Card>
   );
 }
@@ -176,7 +172,23 @@ export default function HomePage() {
   return (
     <>
       <PageHeader title={`Welcome, ${user?.displayName ?? ''}`} subtitle="Join a meeting with its 4-digit code, or rejoin one you are already part of." />
-      <div className={'grid gap-6 lg:grid-cols-2'}>
+      {error && <ErrorText>{error}</ErrorText>}
+
+      {active.length > 0 && (
+        <Card className="mb-6 overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-line/60 px-5 py-4">
+            <h2 className="font-semibold">Live now</h2>
+            <Pill tone="success">{active.length} live</Pill>
+          </div>
+          <ul className="divide-y divide-line/60">
+            {active.map((m) => (
+              <MeetingRow key={m.id} meeting={m} />
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      <div className="space-y-6">
         <JoinCard />
         <CreateCard onCreated={load} />
       </div>
@@ -184,19 +196,17 @@ export default function HomePage() {
       <Card className="mt-8 overflow-hidden">
         <div className="flex items-center gap-2 border-b border-line/60 px-5 py-4">
           <CalendarClock className="size-4 text-fg-subtle" />
-          <h2 className="font-semibold">My meetings</h2>
-          {active.length > 0 && <Pill tone="success">{active.length} live</Pill>}
+          <h2 className="font-semibold">Recent</h2>
         </div>
-        {error && <div className="p-5"><ErrorText>{error}</ErrorText></div>}
         {!meetings && !error && <div className="p-5"><Spinner /></div>}
-        {meetings && meetings.length === 0 && (
-          <EmptyState icon={<Video className="size-8" />} title="No meetings yet">
-            Meetings you create or join appear here.
+        {meetings && ended.length === 0 && (
+          <EmptyState icon={<Video className="size-8" />} title="No past meetings yet">
+            Meetings that have ended appear here, with their recordings.
           </EmptyState>
         )}
-        {meetings && meetings.length > 0 && (
+        {ended.length > 0 && (
           <ul className="divide-y divide-line/60">
-            {[...active, ...ended].map((m) => (
+            {ended.map((m) => (
               <MeetingRow key={m.id} meeting={m} />
             ))}
           </ul>
