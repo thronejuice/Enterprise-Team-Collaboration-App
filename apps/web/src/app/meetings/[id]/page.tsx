@@ -60,7 +60,7 @@ export default function MeetingPage() {
     } catch (e) {
       const message =
         e instanceof ApiError && (e.status === 404 || e.status === 400)
-          ? 'This meeting does not exist, or you have not been admitted. Enter its room code on the home page.'
+          ? 'This meeting doesn’t exist, or you haven’t joined it yet. To join, enter its room code on Home.'
           : errorMessage(e);
       setStage({ kind: 'unavailable', message });
     }
@@ -121,7 +121,7 @@ export default function MeetingPage() {
       case DisconnectReason.PARTICIPANT_REMOVED:
         body = (
           <Centered icon={<CircleSlash className="size-6" />} title="You were removed from this meeting" actions={homeButton}>
-            The host removed you. You cannot rejoin this meeting.
+            The host removed you, so you can’t rejoin it, even with the room code.
           </Centered>
         );
         break;
@@ -146,7 +146,7 @@ export default function MeetingPage() {
       case DisconnectReason.DUPLICATE_IDENTITY:
         body = (
           <Centered icon={<WifiOff className="size-6" />} title="You joined from another tab or device" actions={<>{homeButton}{rejoin}</>}>
-            Only one connection per account is allowed in a meeting.
+            Your account can be in a meeting from one place at a time. Rejoin to move the meeting back to this tab.
           </Centered>
         );
         break;
@@ -156,7 +156,7 @@ export default function MeetingPage() {
       default:
         body = (
           <Centered icon={<WifiOff className="size-6" />} title="You were disconnected" actions={<>{homeButton}{rejoin}</>}>
-            The connection to the meeting was lost. Check the network and rejoin.
+            The connection to the meeting dropped. Check your Wi-Fi or network cable, then rejoin.
           </Centered>
         );
     }

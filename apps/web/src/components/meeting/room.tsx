@@ -13,7 +13,7 @@ import {
   useTrackToggle,
   useTracks,
 } from '@livekit/components-react';
-import { ConnectionState, DisconnectReason, Participant, RoomOptions, ScreenSharePresets, Track, VideoPresets } from 'livekit-client';
+import { ConnectionState, DisconnectReason, MediaDeviceFailure, Participant, RoomOptions, ScreenSharePresets, Track, VideoPresets } from 'livekit-client';
 import { Camera, CameraOff, Circle, Copy, Loader2, Mic, MicOff, MonitorUp, MonitorX, PhoneOff, Square, UserMinus, Users, VolumeX, WifiOff, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from '@/components/modal';
@@ -32,6 +32,19 @@ interface RoomProps {
   isHost: boolean;
   choices: MediaChoices;
   onLeft: (reason?: DisconnectReason) => void;
+}
+
+function deviceFailureMessage(failure?: MediaDeviceFailure): string {
+  switch (failure) {
+    case MediaDeviceFailure.PermissionDenied:
+      return 'Camera or microphone access is blocked. Allow it from the icon in the address bar.';
+    case MediaDeviceFailure.NotFound:
+      return 'No camera or microphone found. Connect one and try again.';
+    case MediaDeviceFailure.DeviceInUse:
+      return 'Another app is using your camera or microphone. Close it and try again.';
+    default:
+      return 'Your camera or microphone stopped working. Turn it off and on to retry.';
+  }
 }
 
 export function MeetingRoom({ meeting, token, serverUrl, isHost, choices, onLeft }: RoomProps) {
@@ -57,7 +70,7 @@ export function MeetingRoom({ meeting, token, serverUrl, isHost, choices, onLeft
       options={options}
       onDisconnected={onLeft}
       onError={(e) => toast(errorMessage(e), 'error')}
-      onMediaDeviceFailure={(failure) => toast(`Media device problem: ${failure ?? 'unknown'}`, 'error')}
+      onMediaDeviceFailure={(failure) => toast(deviceFailureMessage(failure), 'error')}
       className="flex h-dvh flex-col bg-canvas"
     >
       <RoomBody meeting={meeting} isHost={isHost} />
@@ -103,7 +116,7 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
       if (isRecording) toast('This meeting is being recorded.', 'recording');
       return;
     }
-    toast(isRecording ? 'Recording started — this meeting is now being recorded.' : 'Recording stopped.', isRecording ? 'recording' : 'info');
+    toast(isRecording ? 'Recording started. Everyone in the meeting can see this.' : 'Recording stopped.', isRecording ? 'recording' : 'info');
   }, [isRecording, toast]);
 
   useDataChannel('moderation', (msg) => {
@@ -128,6 +141,7 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
           onClick={() => navigator.clipboard?.writeText(meeting.roomCode).then(() => toast('Room code copied', 'success'))}
           className="tnum flex items-center gap-1.5 rounded border border-line px-2 py-0.5 text-xs text-fg-muted hover:bg-surface"
           title="Copy room code"
+          aria-label={`Copy room code ${meeting.roomCode}`}
         >
           Code {meeting.roomCode} <Copy className="size-3" />
         </button>
@@ -138,8 +152,8 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
         )}
         <div className="ml-auto flex items-center gap-3 text-[13px] text-fg-subtle">
           <span className="tnum">{elapsed}</span>
-          <span className="tnum flex items-center gap-1">
-            <Users className="size-4" /> {participants.length}/{meeting.maxParticipants}
+          <span className="tnum flex items-center gap-1" title={`${participants.length} of ${meeting.maxParticipants} participants`}>
+            <Users className="size-4" aria-hidden /> {participants.length}/{meeting.maxParticipants}
           </span>
         </div>
       </header>
@@ -177,7 +191,7 @@ function RoomBody({ meeting, isHost }: { meeting: MeetingDetail; isHost: boolean
         {panelOpen && <ParticipantsPanel meeting={meeting} isHost={isHost} participants={participants} onClose={() => setPanelOpen(false)} />}
       </div>
 
-      <StartAudio label="Click to enable meeting audio" className="fixed top-20 left-1/2 z-50 -translate-x-1/2 rounded bg-primary px-4 py-2 font-medium text-white shadow-float" />
+      <StartAudio label="Your browser paused meeting audio. Click to hear the meeting." className="fixed top-20 left-1/2 z-50 -translate-x-1/2 rounded bg-primary px-4 py-2 font-medium text-white shadow-float" />
 
       <ControlBar meeting={meeting} isHost={isHost} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen((v) => !v)} onLeave={() => void room.disconnect()} />
     </>
@@ -320,7 +334,7 @@ function RecordButton({ meetingId }: { meetingId: string }) {
           // It just left the in-flight states: fetch its final status once to report failures.
           void api<Recording>(`/recordings/${prev.id}`).then((r) => {
             if (r.status === 'FAILED') toast(r.errorMessage ?? 'Recording failed.', 'error');
-            if (r.status === 'COMPLETED') toast('Recording saved. It is available under Recordings.', 'success');
+            if (r.status === 'COMPLETED') toast('Recording saved. Find it under Recordings.', 'success');
           });
         }
         return null;

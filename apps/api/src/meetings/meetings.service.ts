@@ -20,7 +20,7 @@ import { canAccessMeeting, canManageMeeting } from './access';
 import { createWithUniqueCode, isValidRoomCode, RoomCodeExhaustedError } from './room-code';
 
 /** Same response for unknown, ended and malformed codes so codes cannot be probed. */
-const INVALID_CODE_MESSAGE = 'Room code is invalid or the meeting is not available.';
+const INVALID_CODE_MESSAGE = 'No meeting you can join uses this code. Check the 4 digits with the host.';
 
 @Injectable()
 export class MeetingsService {
@@ -101,7 +101,7 @@ export class MeetingsService {
         ip,
         success: false,
       });
-      throw new ForbiddenException('You were removed from this meeting and cannot rejoin.');
+      throw new ForbiddenException('The host removed you from this meeting, so you can’t rejoin it.');
     }
     if (!existing) {
       await this.prisma.meetingParticipant.create({ data: { meetingId: meeting.id, userId: user.id } });
@@ -155,7 +155,7 @@ export class MeetingsService {
     const others = connected.filter((p) => p.identity !== user.id);
     if (others.length >= this.config.limits.maxParticipantsPerRoom) {
       await this.audit.log({ action: 'meeting.full', actorId: user.id, targetType: 'meeting', targetId: meeting.id, ip, success: false });
-      throw new ConflictException(`This meeting is full (${this.config.limits.maxParticipantsPerRoom} participants).`);
+      throw new ConflictException(`This meeting is full (${this.config.limits.maxParticipantsPerRoom} people). Try again when someone leaves.`);
     }
 
     await this.livekit.ensureRoom(meeting.id, this.livekitCapacity());

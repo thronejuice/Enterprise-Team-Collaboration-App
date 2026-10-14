@@ -78,19 +78,20 @@ function CreateCard({ onCreated }: { onCreated: () => void }) {
   if (created) {
     return (
       <Card className="p-6">
-        <p className="text-xs font-medium tracking-[0.015em] text-fg-subtle uppercase">Meeting created</p>
-        <h2 className="mt-1 truncate text-base leading-6 font-semibold">{created.title}</h2>
+        <h2 className="truncate text-base leading-6 font-semibold" title={created.title}>
+          {created.title}
+        </h2>
         <div className="mt-4 flex items-center gap-3">
           <span className="tnum text-[40px] leading-none font-bold tracking-[0.2em] text-primary-soft">{created.roomCode}</span>
           <button
             className="rounded p-2 text-fg-subtle hover:bg-surface-3 hover:text-fg"
-            aria-label="Copy room code"
+            aria-label={`Copy room code ${created.roomCode}`}
             onClick={() => navigator.clipboard?.writeText(created.roomCode).then(() => toast('Room code copied', 'success'))}
           >
             <Copy className="size-4" />
           </button>
         </div>
-        <p className="mt-2 text-[13px] text-fg-subtle">Share this code with signed-in participants.</p>
+        <p className="mt-2 text-[13px] text-fg-subtle">Meeting created. Share this code with the people you’re inviting. They sign in and enter it on Home.</p>
         <div className="mt-5 flex gap-2">
           <Link href={`/meetings/${created.id}`} className={buttonClass()}>
             <Video className="size-4" /> Enter meeting
@@ -132,7 +133,9 @@ function MeetingRow({ meeting }: { meeting: Meeting }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate font-medium">{meeting.title}</p>
+          <p className="truncate font-medium" title={meeting.title}>
+            {meeting.title}
+          </p>
           {meeting.isHost && <Pill tone="primary">Host</Pill>}
         </div>
         <p className="text-[13px] text-fg-subtle">
@@ -146,7 +149,7 @@ function MeetingRow({ meeting }: { meeting: Meeting }) {
       ) : (
         <div className="flex items-center gap-2">
           <Pill>Ended</Pill>
-          <Link href={`/recordings?meeting=${meeting.id}`} className="text-fg-subtle hover:text-fg" title="Recordings" aria-label="Recordings">
+          <Link href={`/recordings?meeting=${meeting.id}`} className="text-fg-subtle hover:text-fg" title="Recordings" aria-label={`Recordings for ${meeting.title}`}>
             <Film className="size-4" />
           </Link>
         </div>
