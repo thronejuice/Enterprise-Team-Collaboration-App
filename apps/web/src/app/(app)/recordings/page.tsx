@@ -63,6 +63,7 @@ function RecordingsList() {
           </EmptyState>
         )}
         {items && items.length > 0 && (
+          <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="border-b border-line/60 text-xs font-medium tracking-[0.015em] text-fg-subtle uppercase">
               <tr>
@@ -92,6 +93,7 @@ function RecordingsList() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </>

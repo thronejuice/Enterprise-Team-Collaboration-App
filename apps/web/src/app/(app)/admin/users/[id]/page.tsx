@@ -251,7 +251,7 @@ function SuspendModal({ open, user, onClose, onDone }: { open: boolean; user: Ad
             required={reason === 'OTHER'}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="min-h-20 w-full rounded border border-line bg-canvas px-3 py-2 text-fg focus:border-primary focus:outline-none"
+            className="min-h-20 w-full rounded border border-field bg-canvas px-3 py-2 text-fg focus:border-primary focus:outline-none"
           />
         </div>
         <fieldset className="space-y-2">

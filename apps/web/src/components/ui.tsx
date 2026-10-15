@@ -7,9 +7,9 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 const variants: Record<Variant, string> = {
-  primary: 'bg-primary text-white hover:bg-primary-hover disabled:hover:bg-primary',
+  primary: 'bg-primary-hover text-white hover:bg-primary-press disabled:hover:bg-primary-hover',
   secondary: 'bg-surface text-fg border border-line hover:bg-surface-3',
-  danger: 'bg-danger text-white font-semibold hover:bg-danger-hover',
+  danger: 'bg-danger-hover text-white font-semibold hover:bg-danger-press',
   ghost: 'text-fg-muted hover:bg-surface hover:text-fg',
 };
 
@@ -47,7 +47,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cx(
-        'h-9 w-full rounded border border-line bg-canvas px-3 text-fg placeholder:text-placeholder transition-colors focus:border-primary focus:outline-none',
+        'h-9 w-full rounded border border-field bg-canvas px-3 text-fg placeholder:text-placeholder transition-colors focus:border-primary focus:outline-none',
         className,
       )}
       {...props}
@@ -58,7 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={cx('h-9 w-full rounded border border-line bg-canvas px-2.5 text-fg focus:border-primary focus:outline-none', className)}
+      className={cx('h-9 w-full rounded border border-field bg-canvas px-2.5 text-fg focus:border-primary focus:outline-none', className)}
       {...props}
     >
       {children}
@@ -94,10 +94,10 @@ export function Pill({ tone = 'neutral', children, className }: { tone?: 'neutra
   const tones = {
     neutral: 'border-line-strong text-fg-muted bg-surface-3/40',
     success: 'border-success/60 text-success bg-success/10',
-    danger: 'border-danger text-danger bg-danger/15',
+    danger: 'border-danger text-red-300 bg-danger/15',
     warning: 'border-warning/60 text-warning bg-warning/10',
     info: 'border-cyan/60 text-cyan bg-cyan/10',
-    primary: 'border-primary/60 text-primary-soft bg-primary/15',
+    primary: 'border-primary/60 text-indigo-300 bg-primary/15',
   };
   return (
     <span className={cx('inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-[14px] font-semibold tracking-[0.03em] uppercase', tones[tone], className)}>

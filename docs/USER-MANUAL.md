@@ -258,7 +258,7 @@ Admin เห็นและดาวน์โหลด/ลบไฟล์บั�
 
 #### สร้างห้อง
 
-หน้า **Home** → **Start a new meeting** ระบบสร้าง **Room Code 4 หลัก** แจกให้ผู้เข้าร่วม และอยู่ในรายการ *My meetings* (กด Rejoin เข้าซ้ำได้โดยไม่ต้องใช้โค้ดอีก)
+หน้า **Home** → กรอก **Meeting title** → **Create meeting** ระบบสร้าง **Room Code 4 หลัก** แจกให้ผู้เข้าร่วม ห้องที่ยังเปิดอยู่จะขึ้นที่ **Live now** ด้านบนสุด (กด Rejoin เข้าซ้ำได้โดยไม่ต้องใช้โค้ดอีก) ส่วนห้องที่จบแล้วอยู่ใน **Recent**
 
 ![Home](manual-images/23-home-create-meeting.png)
 ![สร้างห้องแล้ว](manual-images/24-room-created.png)

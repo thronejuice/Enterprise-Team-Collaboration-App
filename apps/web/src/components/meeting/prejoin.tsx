@@ -62,12 +62,23 @@ function useAudioLevel(track: LocalAudioTrack | null) {
   return level;
 }
 
+/** Own component so the per-frame level updates re-render only the bar, not the whole pre-join page. */
+function MicLevelMeter({ track }: { track: LocalAudioTrack | null }) {
+  const level = useAudioLevel(track);
+  return (
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-canvas" role="meter" aria-label="Microphone level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level * 100)}>
+      <div className="h-full rounded-full bg-cyan transition-[width] duration-75" style={{ width: `${Math.round(level * 100)}%` }} />
+    </div>
+  );
+}
+
 function permissionMessage(error: unknown, what: string): string {
   const name = (error as { name?: string })?.name;
-  if (name === 'NotAllowedError') return `${what} permission was denied. Allow it in the browser's address bar, or join without it.`;
-  if (name === 'NotFoundError') return `No ${what.toLowerCase()} was found.`;
-  if (name === 'NotReadableError') return `The ${what.toLowerCase()} is in use by another application.`;
-  return `${what} is unavailable: ${(error as Error)?.message ?? 'unknown error'}`;
+  const device = what.toLowerCase();
+  if (name === 'NotAllowedError') return `${what} access is blocked. Allow it from the icon in the address bar, or join with your ${device} off.`;
+  if (name === 'NotFoundError') return `No ${device} found. Connect one, or join with your ${device} off.`;
+  if (name === 'NotReadableError') return `Another app is using your ${device}. Close it, then turn the ${device} off and on here.`;
+  return `Your ${device} isn’t working (${(error as Error)?.message ?? 'unknown error'}). You can join with it off.`;
 }
 
 export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingDetail; onJoin: (c: MediaChoices) => void; joining: boolean; error: string }) {
@@ -82,7 +93,6 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
   const videoEl = useRef<HTMLVideoElement>(null);
   const cameras = useDevices('videoinput', videoTrack);
   const mics = useDevices('audioinput', audioTrack);
-  const level = useAudioLevel(audioTrack);
 
   useEffect(() => {
     if (!videoEnabled) return;
@@ -162,8 +172,8 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
             <button
               onClick={() => setAudioEnabled((v) => !v)}
               aria-pressed={audioEnabled}
-              aria-label={audioEnabled ? 'Turn microphone off' : 'Turn microphone on'}
-              className={cx('grid size-11 place-items-center rounded-full', audioEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger text-white')}
+              aria-label={audioEnabled ? 'Mute microphone' : 'Unmute microphone'}
+              className={cx('grid size-11 place-items-center rounded-full', audioEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger-hover text-white')}
             >
               {audioEnabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
             </button>
@@ -171,7 +181,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
               onClick={() => setVideoEnabled((v) => !v)}
               aria-pressed={videoEnabled}
               aria-label={videoEnabled ? 'Turn camera off' : 'Turn camera on'}
-              className={cx('grid size-11 place-items-center rounded-full', videoEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger text-white')}
+              className={cx('grid size-11 place-items-center rounded-full', videoEnabled ? 'bg-surface-3 hover:bg-line-strong' : 'bg-danger-hover text-white')}
             >
               {videoEnabled ? <Camera className="size-5" /> : <CameraOff className="size-5" />}
             </button>
@@ -182,8 +192,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
       </div>
 
       <div className="flex flex-col">
-        <p className="text-xs font-medium tracking-[0.015em] text-fg-subtle uppercase">Ready to join?</p>
-        <h1 className="mt-1 text-[22px] leading-[30px] font-semibold tracking-[-0.015em]">{meeting.title}</h1>
+        <h1 className="text-[22px] leading-[30px] font-semibold tracking-[-0.015em]">{meeting.title}</h1>
         <p className="mt-1 text-fg-subtle">
           Hosted by {meeting.hostName} · Code <span className="tnum font-medium text-fg-muted">{meeting.roomCode}</span>
         </p>
@@ -215,9 +224,7 @@ export function PreJoin({ meeting, onJoin, joining, error }: { meeting: MeetingD
                 </option>
               ))}
             </Select>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-canvas" aria-label="Microphone level">
-              <div className="h-full rounded-full bg-cyan transition-[width] duration-75" style={{ width: `${Math.round(level * 100)}%` }} />
-            </div>
+            <MicLevelMeter track={audioTrack} />
           </div>
         </div>
 

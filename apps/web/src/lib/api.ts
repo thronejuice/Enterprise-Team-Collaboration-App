@@ -87,7 +87,7 @@ export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 429 && error.retryAfterSeconds) {
       const mins = Math.ceil(error.retryAfterSeconds / 60);
-      return `${error.message} (about ${mins} minute${mins === 1 ? '' : 's'})`;
+      return `Too many attempts. Try again in about ${mins} minute${mins === 1 ? '' : 's'}.`;
     }
     return error.message;
   }

@@ -8,7 +8,7 @@
 | หน้า | ใครใช้ | ทำอะไร |
 |---|---|---|
 | `/login` | ทุกคน | เข้าสู่ระบบด้วยบัญชีที่ Admin สร้าง (ไม่มีสมัครเอง) |
-| `/` Home | ทุกคน | กรอก Room Code 4 หลัก, Host สร้างห้อง, รายการ "My meetings" (Rejoin ได้โดยไม่ต้องกรอก code ใหม่) |
+| `/` Home | ทุกคน | กรอก Room Code 4 หลัก, Host สร้างห้อง, รายการ "Live now" และ "Recent" (Rejoin ได้โดยไม่ต้องกรอก code ใหม่) |
 | `/meetings/:id` | ผู้ที่ผ่าน code แล้ว | Pre-join (เลือก/ทดสอบกล้อง-ไมค์) → ห้องประชุม (video, audio, screen share, REC indicator) |
 | `/recordings` | ผู้ที่เคยเข้าร่วม, Host, Admin | ดู/ดาวน์โหลด/ลบ (Host/Admin) ไฟล์บันทึก |
 | `/diagnostics` | ทุกคน | ทดสอบ HTTPS, WebSocket, WebRTC UDP/TCP, publish audio/video จากเครื่องนั้น |
@@ -85,7 +85,7 @@ Roles: **ADMIN** (ทุกอย่าง) · **HOST** (สร้างห้�
 
 1. Login ด้วย admin จาก `.env`
 2. `/admin/users` → สร้างบัญชี HOST สำหรับผู้นำเสนอ และ MEMBER สำหรับลูกค้าแต่ละคน
-3. Host: Home → Start a new meeting → แจก Room Code
+3. Host: Home → กรอก Meeting title → Create meeting → แจก Room Code
 4. ลูกค้า: login → กรอก code → Pre-join → Join meeting
 
 ## 8. ทดสอบอัตโนมัติ
